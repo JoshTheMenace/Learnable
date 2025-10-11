@@ -183,7 +183,7 @@ export default function FileBasedContentWindow({
                     <p className="text-sm font-medium mb-3 leading-relaxed">{children}</p>
                   ),
                   code: ({ children }) => (
-                    <code className="bg-yellow-200 border border-black px-1 py-0.5 font-mono text-xs font-bold">
+                    <code className="border border-black px-1 py-0.5 font-mono text-xs font-bold">
                       {children}
                     </code>
                   ),
