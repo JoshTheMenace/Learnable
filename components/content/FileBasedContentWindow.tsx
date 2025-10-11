@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import EnvironmentButton from './EnvironmentButton';
 
 interface FileBasedContentWindowProps {
   showEnvironmentOnly?: boolean;
@@ -9,6 +10,7 @@ interface FileBasedContentWindowProps {
   onReset?: () => void;
   isAIGenerating?: boolean; // New prop to indicate if AI is actively generating
   forceRefresh?: number; // New prop to trigger immediate refresh
+  onEnvironmentTrigger?: (type: string, prompt: string) => void; // New prop for triggering environments
 }
 
 export default function FileBasedContentWindow({
@@ -16,7 +18,8 @@ export default function FileBasedContentWindow({
   showLessonOnly = false,
   onReset,
   isAIGenerating = false,
-  forceRefresh
+  forceRefresh,
+  onEnvironmentTrigger
 }: FileBasedContentWindowProps) {
   const [lessonContent, setLessonContent] = useState('');
   const [environmentKey, setEnvironmentKey] = useState(Date.now());
@@ -102,6 +105,67 @@ export default function FileBasedContentWindow({
     fetchContent();
   };
 
+  // Types for parsed content parts
+  type ContentPart =
+    | { type: 'text'; content: string }
+    | {
+        type: 'environment-button';
+        envType: 'demo' | 'quiz' | 'exercise' | 'visualization' | 'simulation';
+        description: string;
+        prompt: string;
+        label: string;
+      };
+
+  // Parse environment buttons from lesson content
+  const parseEnvironmentButtons = (content: string): ContentPart[] => {
+    // Look for environment button syntax: [Button Text](button:type:description)
+    const envButtonRegex = new RegExp('\\[([^\\]]+)\\]\\(button:(demo|quiz|exercise|visualization|simulation):([^)]+)\\)', 'g');
+    const parts: ContentPart[] = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = envButtonRegex.exec(content)) !== null) {
+      // Add text before the button
+      if (match.index > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: content.slice(lastIndex, match.index)
+        });
+      }
+
+      // Add the environment button
+      const buttonText = match[1] || '';
+      const envType = match[2] as 'demo' | 'quiz' | 'exercise' | 'visualization' | 'simulation';
+      const description = match[3] || '';
+
+      // Use description as prompt for environment generation
+      const prompt = description;
+
+      // Only add if we have valid values
+      if (envType && description && buttonText) {
+        parts.push({
+          type: 'environment-button',
+          envType,
+          description,
+          prompt,
+          label: buttonText
+        });
+      }
+
+      lastIndex = envButtonRegex.lastIndex;
+    }
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push({
+        type: 'text',
+        content: content.slice(lastIndex)
+      });
+    }
+
+    return parts;
+  };
+
   // Render environment-only view
   if (showEnvironmentOnly) {
     return (
@@ -164,47 +228,67 @@ export default function FileBasedContentWindow({
         <div className="flex-1 overflow-y-auto p-4">
           <div className="prose prose-sm max-w-none">
             {lessonContent ? (
-              <ReactMarkdown
-                components={{
-                  h1: ({ children }) => (
-                    <h1 className="text-2xl font-black border-b-4 border-black pb-2 mb-4">
-                      {children}
-                    </h1>
-                  ),
-                  h2: ({ children }) => (
-                    <h2 className="text-lg font-black border-b-2 border-black pb-1 mb-2">
-                      {children}
-                    </h2>
-                  ),
-                  h3: ({ children }) => (
-                    <h3 className="text-base font-black mb-2">{children}</h3>
-                  ),
-                  p: ({ children }) => (
-                    <p className="text-sm font-medium mb-3 leading-relaxed">{children}</p>
-                  ),
-                  code: ({ children }) => (
-                    <code className="border border-black px-1 py-0.5 font-mono text-xs font-bold">
-                      {children}
-                    </code>
-                  ),
-                  pre: ({ children }) => (
-                    <pre className="bg-gray-900 text-green-400 border-2 border-black p-2 font-mono text-xs font-bold overflow-x-auto">
-                      {children}
-                    </pre>
-                  ),
-                  ul: ({ children }) => (
-                    <ul className="list-none space-y-1 mb-3 text-sm">{children}</ul>
-                  ),
-                  li: ({ children }) => (
-                    <li className="flex items-start">
-                      <span className="font-black mr-1">•</span>
-                      <span className="font-medium">{children}</span>
-                    </li>
-                  ),
-                }}
-              >
-                {lessonContent}
-              </ReactMarkdown>
+              <div>
+                {parseEnvironmentButtons(lessonContent).map((part, index) => {
+                  if (part.type === 'environment-button') {
+                    return (
+                      <EnvironmentButton
+                        key={index}
+                        type={part.envType}
+                        description={part.description}
+                        prompt={part.prompt}
+                        label={part.label}
+                        onTrigger={onEnvironmentTrigger}
+                      />
+                    );
+                  } else {
+                    return (
+                      <ReactMarkdown
+                        key={index}
+                        components={{
+                          h1: ({ children }) => (
+                            <h1 className="text-2xl font-black border-b-4 border-black pb-2 mb-4">
+                              {children}
+                            </h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-lg font-black border-b-2 border-black pb-1 mb-2">
+                              {children}
+                            </h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-base font-black mb-2">{children}</h3>
+                          ),
+                          p: ({ children }) => (
+                            <p className="text-sm font-medium mb-3 leading-relaxed">{children}</p>
+                          ),
+                          code: ({ children }) => (
+                            <code className="border border-black px-1 py-0.5 font-mono text-xs font-bold">
+                              {children}
+                            </code>
+                          ),
+                          pre: ({ children }) => (
+                            <pre className="bg-gray-900 text-green-400 border-2 border-black p-2 font-mono text-xs font-bold overflow-x-auto">
+                              {children}
+                            </pre>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="list-none space-y-1 mb-3 text-sm">{children}</ul>
+                          ),
+                          li: ({ children }) => (
+                            <li className="flex items-start">
+                              <span className="font-black mr-1">•</span>
+                              <span className="font-medium">{children}</span>
+                            </li>
+                          ),
+                        }}
+                      >
+                        {part.content}
+                      </ReactMarkdown>
+                    );
+                  }
+                })}
+              </div>
             ) : (
               <div className="flex items-center justify-center h-32">
                 <div className="text-center">

@@ -20,7 +20,13 @@ const generateLessonPlanTool = tool(
     - Examples where relevant
     - Bullet points for key concepts
     - Code blocks if applicable
+    - Interactive elements using special button syntax: [Button Text](button:type:description)
+      - Available types: demo, quiz, exercise, visualization, simulation
+      - Example: [Explore Rock Formation](button:visualization:Show how different rock types form over time)
+      - Example: [Take Quiz](button:quiz:Test your knowledge about rock classification)
+      - Example: [Try Exercise](button:exercise:Practice identifying rock samples)
 
+    Include 2-3 interactive buttons throughout the lesson that would help students engage with the material.
     Make it engaging and interactive for learning.`;
 
     const result = await generateText({

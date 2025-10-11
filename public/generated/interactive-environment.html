@@ -23,208 +23,293 @@
     <div id="p5-container"></div>
 
     <script>
-        // Rock Types Classification Interactive Demo
-// Three main rock types: Igneous, Sedimentary, Metamorphic
-
-let rocks = [];
-let selectedRock = null;
-let infoBoxVisible = false;
+        let rocks = [];
+let currentRockIndex = 0;
+let score = 0;
+let totalRocks = 0;
+let showFeedback = false;
+let feedbackMessage = "";
+let feedbackColor;
+let gameOver = false;
 
 function setup() {
   createCanvas(800, 600);
   
-  // Create rock objects with their properties
-  rocks.push({
-    type: "Igneous",
-    x: 150,
-    y: 200,
-    size: 80,
-    color: color(200, 100, 100), // Reddish color for igneous
-    formation: "Formed when molten rock (magma or lava) cools and solidifies",
-    characteristics: "• Hard and crystalline\n• No fossils\n• Often found near volcanoes\n• Examples: granite, basalt",
-    examples: "Granite, Basalt, Obsidian, Pumice",
-    texture: "Crystalline structure"
-  });
+  // Initialize rock samples with their characteristics and correct classification
+  rocks = [
+    {
+      name: "Granite",
+      texture: "Coarse-grained, rough",
+      color: "Light-colored, often pink, white, or gray",
+      crystalSize: "Large visible crystals",
+      layers: "No layers",
+      type: "igneous",
+      image: null
+    },
+    {
+      name: "Basalt",
+      texture: "Fine-grained, smooth",
+      color: "Dark gray to black",
+      crystalSize: "Very small or no visible crystals",
+      layers: "No layers",
+      type: "igneous",
+      image: null
+    },
+    {
+      name: "Sandstone",
+      texture: "Grainy, can be rough or smooth",
+      color: "Brown, tan, or red",
+      crystalSize: "Visible grains, no crystals",
+      layers: "Often shows layers",
+      type: "sedimentary",
+      image: null
+    },
+    {
+      name: "Limestone",
+      texture: "Smooth to slightly grainy",
+      color: "White, gray, or tan",
+      crystalSize: "Fine-grained, may have visible fossils",
+      layers: "May show layers",
+      type: "sedimentary",
+      image: null
+    },
+    {
+      name: "Marble",
+      texture: "Smooth, often polished",
+      color: "White with colorful veins",
+      crystalSize: "Large interlocking crystals",
+      layers: "No layers, but may have bands",
+      type: "metamorphic",
+      image: null
+    },
+    {
+      name: "Schist",
+      texture: "Flaky or platy",
+      color: "Various colors, often with mica",
+      crystalSize: "Visible platy crystals",
+      layers: "Distinct foliation (layers)",
+      type: "metamorphic",
+      image: null
+    }
+  ];
   
-  rocks.push({
-    type: "Sedimentary",
-    x: 400,
-    y: 200,
-    size: 80,
-    color: color(180, 160, 120), // Brownish color for sedimentary
-    formation: "Formed when sediments (sand, mud, organic matter) are compressed and cemented together over time",
-    characteristics: "• Layered appearance\n• May contain fossils\n• Formed at or near Earth's surface\n• Examples: limestone, sandstone",
-    examples: "Limestone, Sandstone, Shale, Coal",
-    texture: "Layered or grainy structure"
-  });
+  totalRocks = rocks.length;
   
-  rocks.push({
-    type: "Metamorphic",
-    x: 650,
-    y: 200,
-    size: 80,
-    color: color(120, 120, 180), // Bluish color for metamorphic
-    formation: "Formed when existing rocks are transformed by heat, pressure, or chemical processes",
-    characteristics: "• Often have bands or layers\n• May show foliation\n• Formed deep underground\n• Examples: marble, slate, gneiss",
-    examples: "Marble, Slate, Gneiss, Schist",
-    texture: "Banded or foliated structure"
-  });
+  // Create buttons for rock classification
+  let buttonY = 450;
+  let buttonWidth = 150;
+  let buttonHeight = 50;
+  let buttonSpacing = 50;
+  
+  createButton('Igneous')
+    .position(100, buttonY)
+    .size(buttonWidth, buttonHeight)
+    .mousePressed(() => checkAnswer('igneous'));
+    
+  createButton('Sedimentary')
+    .position(100 + buttonWidth + buttonSpacing, buttonY)
+    .size(buttonWidth, buttonHeight)
+    .mousePressed(() => checkAnswer('sedimentary'));
+    
+  createButton('Metamorphic')
+    .position(100 + 2 * (buttonWidth + buttonSpacing), buttonY)
+    .size(buttonWidth, buttonHeight)
+    .mousePressed(() => checkAnswer('metamorphic'));
+    
+  createButton('Next Rock')
+    .position(350, 520)
+    .size(100, 40)
+    .mousePressed(nextRock)
+    .hide();
 }
 
 function draw() {
-  background(240);
+  background(220);
   
-  // Draw title
-  fill(0);
-  textSize(32);
-  textAlign(CENTER);
-  text("Rock Types Classification", width/2, 50);
-  
-  // Draw instructions
-  textSize(16);
-  text("Click on a rock to learn more about it!", width/2, 80);
-  
-  // Draw each rock type
-  for (let i = 0; i < rocks.length; i++) {
-    let rock = rocks[i];
-    
-    // Draw rock circle
-    fill(rock.color);
-    stroke(0);
-    strokeWeight(2);
-    ellipse(rock.x, rock.y, rock.size);
-    
-    // Draw rock type label
-    fill(0);
-    textSize(18);
-    textAlign(CENTER);
-    text(rock.type, rock.x, rock.y + rock.size/2 + 25);
-    
-    // Draw hover effect
-    if (dist(mouseX, mouseY, rock.x, rock.y) < rock.size/2) {
-      strokeWeight(4);
-      noFill();
-      ellipse(rock.x, rock.y, rock.size + 10);
-    }
-  }
-  
-  // Draw info box if a rock is selected
-  if (infoBoxVisible && selectedRock) {
-    drawInfoBox();
-  }
-  
-  // Draw legend
-  drawLegend();
-}
-
-function drawInfoBox() {
-  // Draw info box background
-  fill(255);
-  stroke(0);
-  strokeWeight(2);
-  rect(100, 350, 600, 200, 10);
-  
-  // Draw rock type title
-  fill(selectedRock.color);
-  textSize(24);
-  textAlign(LEFT);
-  text(selectedRock.type + " Rocks", 120, 380);
-  
-  // Draw formation info
-  fill(0);
-  textSize(16);
-  text("Formation: " + selectedRock.formation, 120, 410, 560, 50);
-  
-  // Draw characteristics
-  text("Characteristics:", 120, 450);
-  text(selectedRock.characteristics, 140, 470, 560, 80);
-  
-  // Draw examples
-  text("Examples: " + selectedRock.examples, 120, 530);
-  
-  // Draw close button
-  fill(200, 50, 50);
-  rect(670, 360, 20, 20, 5);
-  fill(255);
-  textSize(18);
-  text("X", 680, 375);
-}
-
-function drawLegend() {
-  // Draw legend box
-  fill(255, 200);
-  stroke(0);
-  strokeWeight(1);
-  rect(20, 20, 200, 100, 5);
-  
-  // Draw legend title
-  fill(0);
-  textSize(16);
-  textAlign(LEFT);
-  text("Rock Types Legend:", 30, 40);
-  
-  // Draw legend items
-  fill(200, 100, 100);
-  ellipse(40, 60, 15);
-  fill(0);
-  textSize(14);
-  text("Igneous", 55, 65);
-  
-  fill(180, 160, 120);
-  ellipse(40, 80, 15);
-  fill(0);
-  text("Sedimentary", 55, 85);
-  
-  fill(120, 120, 180);
-  ellipse(40, 100, 15);
-  fill(0);
-  text("Metamorphic", 55, 105);
-}
-
-function mousePressed() {
-  // Check if close button was clicked
-  if (infoBoxVisible && mouseX > 670 && mouseX < 690 && mouseY > 360 && mouseY < 380) {
-    infoBoxVisible = false;
-    selectedRock = null;
+  if (gameOver) {
+    displayFinalScore();
     return;
   }
   
-  // Check if any rock was clicked
-  for (let i = 0; i < rocks.length; i++) {
-    let rock = rocks[i];
-    if (dist(mouseX, mouseY, rock.x, rock.y) < rock.size/2) {
-      selectedRock = rock;
-      infoBoxVisible = true;
-      return;
-    }
+  // Display current rock information
+  let currentRock = rocks[currentRockIndex];
+  
+  // Draw rock sample area
+  fill(180, 180, 200);
+  rect(50, 50, 700, 350);
+  fill(0);
+  textSize(24);
+  textAlign(CENTER);
+  text("Rock Sample #" + (currentRockIndex + 1), width/2, 80);
+  
+  // Draw rock characteristics
+  textSize(16);
+  textAlign(LEFT);
+  text("Texture: " + currentRock.texture, 70, 130);
+  text("Color: " + currentRock.color, 70, 160);
+  text("Crystal Size: " + currentRock.crystalSize, 70, 190);
+  text("Layers: " + currentRock.layers, 70, 220);
+  
+  // Draw visual representation of the rock
+  drawRockVisual(currentRock);
+  
+  // Display feedback if needed
+  if (showFeedback) {
+    fill(feedbackColor);
+    textSize(20);
+    textAlign(CENTER);
+    text(feedbackMessage, width/2, 400);
   }
   
-  // If clicked outside rocks and info box is visible, close it
-  if (infoBoxVisible && 
-      (mouseX < 100 || mouseX > 700 || mouseY < 350 || mouseY > 550)) {
-    infoBoxVisible = false;
-    selectedRock = null;
+  // Display progress
+  fill(0);
+  textSize(16);
+  textAlign(RIGHT);
+  text("Rock " + (currentRockIndex + 1) + " of " + totalRocks, width - 50, 30);
+  text("Score: " + score, width - 50, 50);
+}
+
+function drawRockVisual(rock) {
+  // Draw a visual representation based on rock type
+  let centerX = width/2;
+  let centerY = 250;
+  
+  if (rock.type === "igneous") {
+    // Draw igneous rock (granite-like appearance)
+    fill(150, 100, 80);
+    noStroke();
+    ellipse(centerX, centerY, 150, 150);
+    
+    // Draw crystals
+    fill(200, 150, 150);
+    ellipse(centerX - 30, centerY - 20, 25, 25);
+    fill(180, 180, 180);
+    ellipse(centerX + 40, centerY - 10, 30, 30);
+    fill(120, 120, 140);
+    ellipse(centerX + 10, centerY + 30, 20, 20);
+    fill(220, 200, 200);
+    ellipse(centerX - 40, centerY + 20, 35, 35);
+  } 
+  else if (rock.type === "sedimentary") {
+    // Draw sedimentary rock with layers
+    noStroke();
+    fill(200, 180, 150);
+    rect(centerX - 75, centerY - 75, 150, 30);
+    fill(180, 160, 130);
+    rect(centerX - 75, centerY - 45, 150, 30);
+    fill(160, 140, 110);
+    rect(centerX - 75, centerY - 15, 150, 30);
+    fill(140, 120, 90);
+    rect(centerX - 75, centerY + 15, 150, 30);
+    fill(120, 100, 70);
+    rect(centerX - 75, centerY + 45, 150, 30);
+  } 
+  else if (rock.type === "metamorphic") {
+    // Draw metamorphic rock with foliation
+    fill(200, 200, 220);
+    noStroke();
+    ellipse(centerX, centerY, 150, 150);
+    
+    // Draw foliation lines
+    stroke(100, 100, 120);
+    strokeWeight(2);
+    for (let i = 0; i < 5; i++) {
+      let y = centerY - 60 + i * 30;
+      line(centerX - 70, y, centerX + 70, y);
+    }
   }
 }
 
-function keyPressed() {
-  // Press 'R' to reset selection
-  if (key === 'r' || key === 'R') {
-    infoBoxVisible = false;
-    selectedRock = null;
+function checkAnswer(userAnswer) {
+  if (showFeedback) return; // Prevent multiple answers for the same rock
+  
+  let currentRock = rocks[currentRockIndex];
+  let correct = userAnswer === currentRock.type;
+  
+  if (correct) {
+    score++;
+    feedbackMessage = "Correct! " + currentRock.name + " is " + currentRock.type + ".";
+    feedbackColor = color(0, 180, 0); // Green for correct
+  } else {
+    feedbackMessage = "Incorrect. " + currentRock.name + " is " + currentRock.type + ", not " + userAnswer + ".";
+    feedbackColor = color(180, 0, 0); // Red for incorrect
   }
   
-  // Press '1', '2', or '3' to select rock types
-  if (key === '1') {
-    selectedRock = rocks[0];
-    infoBoxVisible = true;
-  } else if (key === '2') {
-    selectedRock = rocks[1];
-    infoBoxVisible = true;
-  } else if (key === '3') {
-    selectedRock = rocks[2];
-    infoBoxVisible = true;
+  showFeedback = true;
+  
+  // Show next button after feedback
+  let nextBtn = select('button:contains("Next Rock")');
+  if (!nextBtn) {
+    nextBtn = createButton('Next Rock')
+      .position(350, 520)
+      .size(100, 40)
+      .mousePressed(nextRock);
   }
+  nextBtn.show();
+}
+
+function nextRock() {
+  currentRockIndex++;
+  
+  if (currentRockIndex >= rocks.length) {
+    gameOver = true;
+  } else {
+    showFeedback = false;
+    // Hide next button until user answers
+    select('button:contains("Next Rock")').hide();
+  }
+}
+
+function displayFinalScore() {
+  background(240);
+  
+  fill(0);
+  textSize(32);
+  textAlign(CENTER);
+  text("Rock Identification Quiz Complete!", width/2, 100);
+  
+  textSize(24);
+  text("Your Score: " + score + " out of " + totalRocks, width/2, 180);
+  
+  let percentage = (score / totalRocks) * 100;
+  textSize(20);
+  text("Percentage: " + nf(percentage, 0, 1) + "%", width/2, 220);
+  
+  // Show performance message
+  if (percentage >= 80) {
+    fill(0, 180, 0);
+    text("Excellent! You're a rock identification expert!", width/2, 270);
+  } else if (percentage >= 60) {
+    fill(200, 150, 0);
+    text("Good job! Keep practicing to improve your skills.", width/2, 270);
+  } else {
+    fill(180, 0, 0);
+    text("Keep studying the characteristics of different rock types!", width/2, 270);
+  }
+  
+  // Display summary of all rocks
+  fill(0);
+  textSize(16);
+  textAlign(LEFT);
+  let y = 320;
+  for (let i = 0; i < rocks.length; i++) {
+    text((i+1) + ". " + rocks[i].name + " - " + rocks[i].type, 100, y);
+    y += 25;
+  }
+  
+  // Restart button
+  createButton('Restart Quiz')
+    .position(width/2 - 50, 500)
+    .size(100, 40)
+    .mousePressed(restartQuiz);
+}
+
+function restartQuiz() {
+  currentRockIndex = 0;
+  score = 0;
+  showFeedback = false;
+  gameOver = false;
+  select('button:contains("Next Rock")').hide();
 }
     </script>
 </body>

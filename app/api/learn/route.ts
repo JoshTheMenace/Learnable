@@ -15,6 +15,7 @@ const LearnRequestSchema = z.object({
   currentLessonSection: z.string().optional(),
   currentEnvironmentCode: z.string().optional(),
   userInput: z.string(),
+  environmentType: z.enum(['demo', 'quiz', 'exercise', 'visualization', 'simulation']).optional(),
 });
 
 // Helper functions for file-based content management
@@ -68,7 +69,7 @@ function writeInteractiveEnvironment(p5Code: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sessionId, chatHistory, currentLessonSection, currentEnvironmentCode, userInput } =
+    const { sessionId, chatHistory, currentLessonSection, currentEnvironmentCode, userInput, environmentType } =
       LearnRequestSchema.parse(body);
 
     // Create context-aware prompt for the orchestrator agent
@@ -78,6 +79,7 @@ CURRENT SESSION STATE:
 - Session ID: ${sessionId}
 - Current Lesson: ${currentLessonSection || 'None - ready to start new lesson'}
 - Interactive Environment: ${currentEnvironmentCode ? 'Active visualization available' : 'None - ready to create'}
+${environmentType ? `- Requested Environment Type: ${environmentType} (demo/quiz/exercise/visualization/simulation)` : ''}
 
 PREVIOUS CONVERSATION:
 ${chatHistory.map(msg => `${msg.role.toUpperCase()}: ${msg.content}`).join('\n')}
@@ -88,9 +90,16 @@ IMPORTANT: Be EXTREMELY CONCISE. Only call each tool ONCE per request.
 
 Based on the user's request, choose ONE appropriate action:
 - New topic? Call generate_lesson_plan ONCE
-- Need visualization? Call generate_interactive_environment ONCE
+- Need visualization? Call generate_interactive_environment ONCE ${environmentType ? `(Type: ${environmentType})` : ''}
 - Update existing code? Call update_interactive_environment ONCE
 - Question? Call answer_question_directly ONCE
+
+${environmentType ? `ENVIRONMENT TYPE GUIDANCE:
+- demo: Interactive demonstration/exploration
+- quiz: Question-based assessment with feedback
+- exercise: Hands-on practice activity
+- visualization: Data charts, graphs, or visual representations
+- simulation: Interactive physics/science simulations` : ''}
 
 Do NOT repeat yourself. Do NOT say what you're going to do multiple times.
 After calling a tool, give a SINGLE brief confirmation (max 2 sentences).`;

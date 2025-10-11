@@ -199,7 +199,7 @@ export default function LearnPage() {
       const userMessage: Message = {
         id: `user_${Date.now()}`,
         role: 'user',
-        content: `I want to learn about ${topic}. Please create a lesson plan and an interactive visualization to help me understand it.`,
+        content: `I want to learn about ${topic}. Please create a lesson plan to help me understand it.`,
       };
 
       setMessages(prev => [...prev, userMessage]);
@@ -367,6 +367,85 @@ export default function LearnPage() {
     }
   };
 
+  // Handle environment trigger from lesson content
+  const handleEnvironmentTrigger = async (type: string, prompt: string) => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/learn', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+          chatHistory: messages,
+          currentLessonSection,
+          currentEnvironmentCode,
+          userInput: `Generate a ${type} environment: ${prompt}`,
+          environmentType: type,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate environment');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      // Process the streaming response similar to handleSubmit
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = new TextDecoder().decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.type === 'tool_result') {
+                if (data.tool_name.includes('generate_interactive_environment') && data.result) {
+                  try {
+                    const envData = JSON.parse(data.result);
+                    if (envData.code) {
+                      let cleanCode = envData.code;
+                      if (cleanCode.startsWith('```javascript')) {
+                        cleanCode = cleanCode.replace(/^```javascript\n?/, '').replace(/\n?```$/, '');
+                      } else if (cleanCode.startsWith('```')) {
+                        cleanCode = cleanCode.replace(/^```\n?/, '').replace(/\n?```$/, '');
+                      }
+                      setCurrentEnvironmentCode(cleanCode);
+                    }
+                  } catch (e) {
+                    if (typeof data.result === 'string' && data.result.trim()) {
+                      setCurrentEnvironmentCode(data.result);
+                    }
+                  }
+                }
+              } else if (data.type === 'done') {
+                setForceRefresh(Date.now());
+              }
+            } catch (e) {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error generating environment:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="h-screen bg-yellow-300 flex">
       {/* Chat Interface - Left Side (25% width) */}
@@ -397,6 +476,7 @@ export default function LearnPage() {
           showLessonOnly={true}
           isAIGenerating={isLoading}
           forceRefresh={forceRefresh}
+          onEnvironmentTrigger={handleEnvironmentTrigger}
         />
       </div>
     </div>
