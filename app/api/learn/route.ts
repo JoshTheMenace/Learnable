@@ -46,17 +46,32 @@ Always be educational, engaging, and make learning interactive when possible.`;
     const orchestratorQuery = query({
       prompt: contextPrompt,
       options: {
-        model: 'claude-3-5-sonnet-20241022',
         mcpServers: {
           'tutor-tools': tutorMcpServer,
         },
-        systemPrompt: {
-          type: 'preset',
-          preset: 'claude_code',
-          append: `You are an AI tutor orchestrator. Use the available tools to help users learn effectively. Always prioritize educational value and interactivity.`
-        },
-        maxTurns: 3,
-        temperature: 0.7,
+        systemPrompt: `You are an AI tutor orchestrator. You have access to specialized tools for education:
+
+AVAILABLE TOOLS:
+- generate_lesson_plan: Create educational content in Markdown format
+- generate_interactive_environment: Create p5.js visualizations and simulations
+- update_interactive_environment: Modify existing p5.js code
+- answer_question_directly: Provide direct explanations
+
+INSTRUCTIONS:
+- For new topics: Start with generate_lesson_plan to create educational content
+- For visualizations: Use generate_interactive_environment to create p5.js code
+- For code changes: Use update_interactive_environment with the current code
+- For questions: Use answer_question_directly for explanations
+- Always be educational, engaging, and encourage learning
+- Make lessons interactive and visual when possible
+- DO NOT use any other tools like TodoWrite, Read, Write, etc.
+- ONLY use the educational tools provided above
+
+Analyze the user's request and use the appropriate tool(s).`,
+        permissionMode: 'bypassPermissions',
+        allowedTools: ['generate_lesson_plan', 'generate_interactive_environment', 'update_interactive_environment', 'answer_question_directly'],
+        maxTurns: 5,
+        //temperature: 0.7,
       },
     });
 
@@ -66,6 +81,8 @@ Always be educational, engaging, and make learning interactive when possible.`;
       async start(controller) {
         try {
           for await (const message of orchestratorQuery) {
+            console.log('Processing message:', message.type);
+
             if (message.type === 'assistant') {
               // Extract content from assistant messages
               const content = message.message.content;
@@ -88,12 +105,70 @@ Always be educational, engaging, and make learning interactive when possible.`;
                   }
                 }
               }
+            } else if (message.type === 'user') {
+              // Handle tool results that come back as user messages
+              const content = message.message.content;
+              if (Array.isArray(content)) {
+                for (const block of content) {
+                  if (block.type === 'tool_result') {
+                    console.log('Tool result found:', block);
+
+                    // Extract the actual tool name from the tool_use_id or content
+                    let toolName = 'unknown';
+                    if (block.tool_use_id) {
+                      // Extract tool name from MCP format
+                      const match = block.tool_use_id.match(/mcp__tutor-tools__(.+)/);
+                      if (match) {
+                        toolName = match[1];
+                      }
+                    }
+
+                    // Handle different content formats - extract the actual text content
+                    let resultContent = block.content;
+                    if (Array.isArray(block.content) && block.content.length > 0) {
+                      // Get the text from the first content block
+                      resultContent = block.content[0].text || block.content[0];
+                    }
+
+                    // Only send tool results from our educational tools
+                    if (toolName.includes('generate_lesson_plan') ||
+                        toolName.includes('generate_interactive_environment') ||
+                        toolName.includes('update_interactive_environment') ||
+                        toolName.includes('answer_question_directly')) {
+
+                      const chunk = `data: ${JSON.stringify({
+                        type: 'tool_result',
+                        tool_name: toolName,
+                        result: resultContent
+                      })}\n\n`;
+                      controller.enqueue(encoder.encode(chunk));
+                    }
+                  }
+                }
+              }
             } else if (message.type === 'result') {
-              const chunk = `data: ${JSON.stringify({
-                type: 'done',
-                result: message.result
-              })}\n\n`;
+              let resultData;
+              if (message.subtype === 'success') {
+                resultData = {
+                  type: 'done',
+                  success: true,
+                  result: message.result,
+                  cost: message.total_cost_usd,
+                  usage: message.usage
+                };
+              } else {
+                resultData = {
+                  type: 'done',
+                  success: false,
+                  error: message.subtype,
+                  cost: message.total_cost_usd,
+                  usage: message.usage
+                };
+              }
+
+              const chunk = `data: ${JSON.stringify(resultData)}\n\n`;
               controller.enqueue(encoder.encode(chunk));
+              break; // End the loop when we get the final result
             }
           }
           controller.close();

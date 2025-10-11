@@ -24,7 +24,7 @@ const generateLessonPlanTool = tool(
     Make it engaging and interactive for learning.`;
 
     const result = await generateText({
-      model: cerebras('llama3.1-70b'),
+      model: cerebras('gpt-oss-120b'),
       prompt,
       temperature: 0.7,
       maxTokens: 1500,
@@ -69,7 +69,7 @@ const generateInteractiveEnvironmentTool = tool(
     Return only the JavaScript code without markdown code blocks.`;
 
     const result = await generateText({
-      model: cerebras('llama3.1-70b'), // Using llama3.1-70b since qwen-3-coder-480b might not be available
+      model: cerebras('qwen-3-coder-480b'),
       prompt,
       temperature: 0.3,
       maxTokens: 2000,
@@ -109,7 +109,7 @@ const updateInteractiveEnvironmentTool = tool(
     Maintain the overall structure and functionality while making the requested changes.`;
 
     const result = await generateText({
-      model: cerebras('llama3.1-70b'),
+      model: cerebras('qwen-3-coder-480b'),
       prompt,
       temperature: 0.3,
       maxTokens: 2000,
@@ -149,7 +149,7 @@ const answerQuestionDirectlyTool = tool(
     - Encourages further learning`;
 
     const result = await generateText({
-      model: cerebras('llama3.1-70b'),
+      model: cerebras('gpt-oss-120b'),
       prompt,
       temperature: 0.6,
       maxTokens: 1000,

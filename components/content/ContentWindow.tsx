@@ -11,18 +11,66 @@ interface ContentWindowProps {
 export default function ContentWindow({ lessonContent, environmentCode }: ContentWindowProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('ContentWindow received lessonContent:', lessonContent ? lessonContent.substring(0, 100) + '...' : 'none');
+    console.log('ContentWindow received environmentCode:', environmentCode ? environmentCode.substring(0, 100) + '...' : 'none');
+  }, [lessonContent, environmentCode]);
+
   useEffect(() => {
     if (environmentCode && canvasRef.current) {
-      // Clear any existing content
+      // Clear any existing p5 instances and canvas elements
       canvasRef.current.innerHTML = '';
 
+      // Remove any existing p5 instances from the window
+      if ((window as any).p5Instance) {
+        try {
+          (window as any).p5Instance.remove();
+        } catch (e) {
+          console.log('Previous p5 instance cleanup attempt');
+        }
+      }
+
       try {
-        // Create a script element and execute the code
+        // Create a wrapper function to isolate the p5 code
+        const wrappedCode = `
+          (function() {
+            // Clean up any existing canvases
+            const existingCanvases = document.querySelectorAll('#p5-container canvas');
+            existingCanvases.forEach(canvas => canvas.remove());
+
+            ${environmentCode}
+
+            // If there's a setup function, it's likely p5.js code in global mode
+            if (typeof setup === 'function') {
+              // Create a new p5 instance attached to the container
+              window.p5Instance = new p5((p) => {
+                p.setup = setup;
+                if (typeof draw === 'function') p.draw = draw;
+                if (typeof mousePressed === 'function') p.mousePressed = mousePressed;
+                if (typeof keyPressed === 'function') p.keyPressed = keyPressed;
+              }, 'p5-container');
+            }
+          })();
+        `;
+
+        // Execute the wrapped code
         const script = document.createElement('script');
-        script.textContent = environmentCode;
-        canvasRef.current.appendChild(script);
+        script.textContent = wrappedCode;
+        document.head.appendChild(script);
+
+        // Clean up the script element
+        setTimeout(() => {
+          document.head.removeChild(script);
+        }, 100);
+
       } catch (error) {
         console.error('Error executing environment code:', error);
+        canvasRef.current.innerHTML = `
+          <div class="p-4 bg-red-100 border-4 border-red-500 text-red-800 font-bold">
+            Error executing visualization code: ${error instanceof Error ? error.message : 'Unknown error'}
+          </div>
+        `;
       }
     }
   }, [environmentCode]);
