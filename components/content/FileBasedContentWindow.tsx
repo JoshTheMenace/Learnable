@@ -48,14 +48,11 @@ export default function FileBasedContentWindow({
       if (envResponse.ok) {
         const envContent = await envResponse.text();
 
-        // Only refresh iframe if environment content actually changed AND it's not just the default template
-        if (envContent !== previousEnvironmentContent && previousEnvironmentContent !== '') {
+        // Only refresh iframe if environment content actually changed
+        if (envContent !== previousEnvironmentContent) {
           console.log('[ENV] Content changed! Refreshing iframe...');
           setPreviousEnvironmentContent(envContent);
-          setEnvironmentKey(Date.now()); // This will trigger iframe refresh only when needed
-        } else if (previousEnvironmentContent === '') {
-          // First load - just set the content without refreshing
-          setPreviousEnvironmentContent(envContent);
+          setEnvironmentKey(Date.now()); // This will trigger iframe refresh when needed
         }
       }
     } catch (error) {
@@ -176,11 +173,11 @@ export default function FileBasedContentWindow({
         <div className="bg-purple-600 border-b-8 border-black p-4 flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-black text-white">
-              [ENV] INTERACTIVE ENVIRONMENT
+              INTERACTIVE ENVIRONMENT
             </h2>
             {isAIGenerating && (
               <p className="text-purple-200 text-sm font-bold">
-                [AI] Generating content...
+                AI Generating content...
               </p>
             )}
           </div>
@@ -211,7 +208,7 @@ export default function FileBasedContentWindow({
                 <div className="text-4xl font-black text-black mb-4">⚡ GENERATING ⚡</div>
                 <div className="text-lg font-bold text-black">Creating interactive content...</div>
                 <div className="flex justify-center mt-4">
-                  <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin"></div>
+                  <div className="w-8 h-8 border-4 border-black border-t-yellow-300 animate-spin rounded-full"></div>
                 </div>
               </div>
             </div>
@@ -234,20 +231,20 @@ export default function FileBasedContentWindow({
         {/* Header */}
         <div className="bg-green-600 border-b-8 border-black p-4">
           <h2 className="text-xl font-black text-white">
-            [LESSON] CONTENT
+            LESSON CONTENT
           </h2>
         </div>
 
         {/* Lesson Content */}
         <div className="flex-1 overflow-y-auto p-4 relative">
           {/* Loading overlay for lesson content */}
-          {isAIGenerating && !lessonContent && (
+          {isAIGenerating && (
             <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10">
               <div className="bg-green-400 border-8 border-black p-8 text-center">
                 <div className="text-4xl font-black text-black mb-4">📚 WRITING 📚</div>
                 <div className="text-lg font-bold text-black">Generating lesson content...</div>
                 <div className="flex justify-center mt-4">
-                  <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin"></div>
+                  <div className="w-8 h-8 border-4 border-black border-t-green-400 animate-spin rounded-full"></div>
                 </div>
               </div>
             </div>
@@ -256,7 +253,7 @@ export default function FileBasedContentWindow({
           <div className="lesson-content">
             <style jsx>{`
               .neo-brutalist-content h1 {
-                font-size: 2rem;
+                font-size: clamp(1.5rem, 4vw, 2rem);
                 font-weight: 900;
                 color: #000;
                 text-transform: uppercase;
@@ -266,7 +263,7 @@ export default function FileBasedContentWindow({
                 letter-spacing: -1px;
               }
               .neo-brutalist-content h2 {
-                font-size: 1.5rem;
+                font-size: clamp(1.25rem, 3vw, 1.5rem);
                 font-weight: 900;
                 color: #000;
                 text-transform: uppercase;
@@ -276,7 +273,7 @@ export default function FileBasedContentWindow({
                 letter-spacing: -0.5px;
               }
               .neo-brutalist-content h3 {
-                font-size: 1.25rem;
+                font-size: clamp(1rem, 2.5vw, 1.25rem);
                 font-weight: 900;
                 color: #000;
                 text-transform: uppercase;

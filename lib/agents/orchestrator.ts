@@ -22,15 +22,24 @@ const generateLessonPlanTool = tool(
     - Code blocks using <pre> and <code> tags if applicable
     - Interactive elements using special button syntax: [Button Text](button:type:description)
       - Available types: demo, quiz, exercise, visualization, simulation
-      - Example: [Explore Rock Formation](button:visualization:Show how different rock types form over time)
-      - Example: [Take Quiz](button:quiz:Test your knowledge about rock classification)
-      - Example: [Try Exercise](button:exercise:Practice identifying rock samples)
+      - Make descriptions VERY SPECIFIC and detailed for better environment generation
+      - Example: [Explore Rock Formation](button:visualization:Interactive timeline showing igneous rock cooling and crystallization with temperature controls and mineral formation stages)
+      - Example: [Rock Classification Quiz](button:quiz:Multiple choice quiz with 5 questions about identifying igneous, sedimentary, and metamorphic rocks with visual examples and explanations)
+      - Example: [Mineral Identification Lab](button:exercise:Hands-on exercise where students click on rock samples to identify minerals, test hardness, and classify rock types with scoring system)
 
     Use neo-brutalist styling with:
     - Bold, chunky headings
     - High contrast colors
     - Strong visual hierarchy
     - Include 2-3 interactive buttons throughout the lesson
+
+    CRITICAL: Make button descriptions extremely detailed and specific. Include:
+    - Exact type of interaction (click, drag, input)
+    - Visual elements that will be shown (charts, animations, timers)
+    - Learning objectives and outcomes
+    - UI elements (sliders, buttons, progress bars)
+    - Scoring or feedback mechanisms
+    - Step-by-step processes or sequences
 
     Return ONLY the HTML content (no DOCTYPE, html, head, or body tags - just the content div).
     Make it engaging and interactive for learning.`;
@@ -70,14 +79,24 @@ const generateInteractiveEnvironmentTool = tool(
     const prompt = `Create p5.js JavaScript code for a ${type} about ${concept}.
     Requirements: ${requirements}
 
-    Generate complete, working p5.js code that:
-    - Uses setup() and draw() functions
-    - Is educational and interactive
-    - Includes comments explaining key parts
-    - Uses appropriate p5.js functions for visualization
-    - Has user interaction (mouse, keyboard) where relevant
-    - Is engaging and helps understand the concept
+    IMPORTANT CONSTRAINTS - The visualization will be displayed in a constrained iframe (1000x800px max):
+    - Use createCanvas(950, 750) or smaller to fit properly
+    - Position all UI elements WITHIN the canvas bounds
+    - Place buttons and text at least 30px from canvas edges
+    - Use readable font sizes (14-18px) for better visibility
+    - Avoid external DOM elements (createButton, createSlider) - draw everything on canvas
+    - Make interactive areas clearly visible with proper spacing
 
+    Generate complete, working p5.js code that:
+    - Uses setup() and draw() functions optimized for 950x750 canvas
+    - Is educational and interactive with CANVAS-BASED UI
+    - Includes clear visual feedback for interactions
+    - Uses mouse coordinates for click detection within canvas
+    - Has proper spacing and positioning for constrained view
+    - Uses appropriate colors and contrasts for visibility
+    - Includes on-screen instructions and labels
+
+    Focus on creating a well-organized interface that works perfectly in the larger iframe space.
     Return only the JavaScript code without markdown code blocks.`;
 
     const result = await generateText({

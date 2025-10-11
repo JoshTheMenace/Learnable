@@ -19,6 +19,9 @@ export default function LearnPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingEnvironment, setIsGeneratingEnvironment] = useState(false);
+  const [hasEnvironment, setHasEnvironment] = useState(false);
+  const [hoveredPanel, setHoveredPanel] = useState<'lesson' | 'environment' | null>(null);
   const [currentLessonSection, setCurrentLessonSection] = useState('');
   const [currentEnvironmentCode, setCurrentEnvironmentCode] = useState('');
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -362,6 +365,8 @@ export default function LearnPage() {
       setMessages([]);
       setCurrentLessonSection('');
       setCurrentEnvironmentCode('');
+      setHasEnvironment(false);
+      setHoveredPanel(null);
     } catch (error) {
       console.error('Failed to reset content:', error);
     }
@@ -369,9 +374,10 @@ export default function LearnPage() {
 
   // Handle environment trigger from lesson content
   const handleEnvironmentTrigger = async (type: string, prompt: string) => {
-    if (isLoading) return;
+    if (isLoading || isGeneratingEnvironment) return;
 
-    setIsLoading(true);
+    setIsGeneratingEnvironment(true);
+    setHasEnvironment(true);
 
     try {
       const response = await fetch('/api/learn', {
@@ -442,14 +448,44 @@ export default function LearnPage() {
     } catch (error) {
       console.error('Error generating environment:', error);
     } finally {
-      setIsLoading(false);
+      setIsGeneratingEnvironment(false);
     }
   };
 
+  // Calculate dynamic widths based on state and hover
+  const getWidths = () => {
+    const base = {
+      chat: 'w-1/4',
+      lesson: hasEnvironment ? 'w-1/2' : 'w-3/4',
+      environment: hasEnvironment ? 'w-1/4' : 'w-0'
+    };
+
+    // Apply hover effects only if environment exists
+    if (hasEnvironment && hoveredPanel) {
+      if (hoveredPanel === 'lesson') {
+        return {
+          chat: 'w-1/4',
+          lesson: 'w-1/2',
+          environment: 'w-1/4'
+        };
+      } else if (hoveredPanel === 'environment') {
+        return {
+          chat: 'w-1/4',
+          lesson: 'w-1/4',
+          environment: 'w-1/2'
+        };
+      }
+    }
+
+    return base;
+  };
+
+  const widths = getWidths();
+
   return (
     <div className="h-screen bg-yellow-300 flex">
-      {/* Chat Interface - Left Side (25% width) */}
-      <div className="w-1/4 h-full border-r-8 border-black">
+      {/* Chat Interface - Left Side */}
+      <div className={`${widths.chat} h-full border-r-8 border-black transition-all duration-500 ease-in-out`}>
         <ChatInterface
           messages={messages}
           input={input}
@@ -460,18 +496,12 @@ export default function LearnPage() {
         />
       </div>
 
-      {/* Environment - Center (50% width) */}
-      <div className="w-1/2 h-full border-r-8 border-black">
-        <FileBasedContentWindow
-          showEnvironmentOnly={true}
-          onReset={handleReset}
-          isAIGenerating={isLoading}
-          forceRefresh={forceRefresh}
-        />
-      </div>
-
-      {/* Lesson Content - Right Side (25% width) */}
-      <div className="w-1/4 h-full">
+      {/* Lesson Content - Center */}
+      <div
+        className={`${widths.lesson} h-full ${hasEnvironment ? 'border-r-8 border-black' : ''} transition-all duration-500 ease-in-out`}
+        onMouseEnter={() => hasEnvironment && setHoveredPanel('lesson')}
+        onMouseLeave={() => setHoveredPanel(null)}
+      >
         <FileBasedContentWindow
           showLessonOnly={true}
           isAIGenerating={isLoading}
@@ -479,6 +509,22 @@ export default function LearnPage() {
           onEnvironmentTrigger={handleEnvironmentTrigger}
         />
       </div>
+
+      {/* Environment - Right Side */}
+      {hasEnvironment && (
+        <div
+          className={`${widths.environment} h-full transition-all duration-500 ease-in-out overflow-hidden`}
+          onMouseEnter={() => setHoveredPanel('environment')}
+          onMouseLeave={() => setHoveredPanel(null)}
+        >
+          <FileBasedContentWindow
+            showEnvironmentOnly={true}
+            onReset={handleReset}
+            isAIGenerating={isGeneratingEnvironment}
+            forceRefresh={forceRefresh}
+          />
+        </div>
+      )}
     </div>
   );
 }

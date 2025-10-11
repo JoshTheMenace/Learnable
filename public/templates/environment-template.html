@@ -8,98 +8,91 @@
     <style>
         body {
             margin: 0;
-            padding: 0;
-            font-family: 'Courier New', monospace;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 15px;
+            font-family: 'Arial Black', Arial, sans-serif;
+            background: #FFFF00;
             overflow: hidden;
+            height: 100vh;
+            box-sizing: border-box;
         }
         #welcome-container {
             text-align: center;
-            color: white;
-            padding: 40px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+            color: #000;
+            padding: 30px;
+            background: #FF00FF;
+            border: 8px solid #000;
+            box-shadow: 12px 12px 0px #00FF00;
+            margin: 20px auto;
+            max-width: 600px;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
         }
         h1 {
-            font-size: 3em;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
             margin: 0 0 20px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            color: #FFFF00;
+            text-shadow: 4px 4px 0px #000;
         }
         p {
-            font-size: 1.2em;
-            margin: 10px 0;
-            opacity: 0.9;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            margin: 15px 0;
+            font-weight: 700;
+            color: #000;
+            line-height: 1.4;
         }
         .emoji {
-            font-size: 4em;
-            margin: 20px;
-            animation: float 3s ease-in-out infinite;
+            font-size: clamp(2rem, 8vw, 4rem);
+            margin: 20px 0;
+            animation: bounce 2s ease-in-out infinite;
+            display: inline-block;
         }
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
         }
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: -1;
+        .waiting-text {
+            background: #00FF00;
+            color: #000;
+            padding: 8px 16px;
+            border: 4px solid #000;
+            display: inline-block;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            box-shadow: 4px 4px 0px #FF00FF;
+        }
+        .pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
         }
     </style>
 </head>
 <body>
     <div id="welcome-container">
-        <div class="emoji">🎓</div>
-        <h1>Interactive Learning Environment</h1>
-        <p>Ready to create amazing visualizations!</p>
-        <p>Start learning to see interactive content here.</p>
+        <div class="emoji">🎮</div>
+        <h1>Interactive Zone</h1>
+        <p><strong>Ready for Action!</strong></p>
+        <p>Interactive content will appear here when you generate an environment.</p>
+        <div class="waiting-text pulse">WAITING FOR COMMAND...</div>
     </div>
-
-    <script>
-        // Background animation
-        let particles = [];
-
-        function setup() {
-            createCanvas(windowWidth, windowHeight);
-            for (let i = 0; i < 50; i++) {
-                particles.push({
-                    x: random(width),
-                    y: random(height),
-                    size: random(2, 8),
-                    speedX: random(-0.5, 0.5),
-                    speedY: random(-0.5, 0.5),
-                    opacity: random(50, 150)
-                });
-            }
-        }
-
-        function draw() {
-            clear();
-
-            for (let particle of particles) {
-                fill(255, 255, 255, particle.opacity);
-                noStroke();
-                ellipse(particle.x, particle.y, particle.size);
-
-                particle.x += particle.speedX;
-                particle.y += particle.speedY;
-
-                // Wrap around edges
-                if (particle.x < 0) particle.x = width;
-                if (particle.x > width) particle.x = 0;
-                if (particle.y < 0) particle.y = height;
-                if (particle.y > height) particle.y = 0;
-            }
-        }
-
-        function windowResized() {
-            resizeCanvas(windowWidth, windowHeight);
-        }
-    </script>
 </body>
 </html>

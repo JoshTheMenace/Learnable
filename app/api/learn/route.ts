@@ -44,18 +44,37 @@ function writeInteractiveEnvironment(p5Code: string) {
     <style>
         body {
             margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            background: #f0f0f0;
+            padding: 15px;
+            font-family: 'Arial Black', Arial, sans-serif;
+            background: #FFFF00;
+            overflow: hidden;
+            max-width: 1000px;
+            max-height: 800px;
+        }
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         canvas {
-            border: 4px solid #333;
+            border: 4px solid #000;
             background: white;
+            box-shadow: 4px 4px 0px #FF00FF;
+            max-width: 100%;
+            max-height: calc(100vh - 60px);
+        }
+        #p5-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
     </style>
 </head>
 <body>
-    <h2>🎮 Interactive Visualization</h2>
+    <h2>🎮 Interactive Learning</h2>
     <div id="p5-container"></div>
 
     <script>

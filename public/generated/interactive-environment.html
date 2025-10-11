@@ -3,396 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Environment</title>
+    <title>Interactive Learning Environment</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <style>
         body {
             margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            background: #f0f0f0;
+            padding: 15px;
+            font-family: 'Arial Black', Arial, sans-serif;
+            background: #FFFF00;
+            overflow: hidden;
+            height: 100vh;
+            box-sizing: border-box;
         }
-        canvas {
-            border: 4px solid #333;
-            background: white;
+        #welcome-container {
+            text-align: center;
+            color: #000;
+            padding: 30px;
+            background: #FF00FF;
+            border: 8px solid #000;
+            box-shadow: 12px 12px 0px #00FF00;
+            margin: 20px auto;
+            max-width: 600px;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        h1 {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            margin: 0 0 20px 0;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            color: #FFFF00;
+            text-shadow: 4px 4px 0px #000;
+        }
+        p {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            margin: 15px 0;
+            font-weight: 700;
+            color: #000;
+            line-height: 1.4;
+        }
+        .emoji {
+            font-size: clamp(2rem, 8vw, 4rem);
+            margin: 20px 0;
+            animation: bounce 2s ease-in-out infinite;
+            display: inline-block;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+        .waiting-text {
+            background: #00FF00;
+            color: #000;
+            padding: 8px 16px;
+            border: 4px solid #000;
+            display: inline-block;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            box-shadow: 4px 4px 0px #FF00FF;
+        }
+        .pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
         }
     </style>
 </head>
 <body>
-    <h2>🎮 Interactive Visualization</h2>
-    <div id="p5-container"></div>
-
-    <script>
-        let array = [];
-let arraySize = 10;
-let sorting = false;
-let sorted = false;
-let currentPass = 0;
-let currentIndex = 0;
-let comparisons = 0;
-let swaps = 0;
-let speed = 10;
-
-// Quiz variables
-let questions = [];
-let currentQuestion = 0;
-let score = 0;
-let showFeedback = false;
-let selectedAnswer = -1;
-let correctAnswer = -1;
-let feedbackText = "";
-let quizCompleted = false;
-
-// Bubble sort visualization variables
-let rectWidth;
-let rectHeightMultiplier = 20;
-
-function setup() {
-  createCanvas(800, 600);
-  rectWidth = width / arraySize;
-  
-  // Initialize random array
-  for (let i = 0; i < arraySize; i++) {
-    array.push(floor(random(1, 20)));
-  }
-  
-  // Initialize quiz questions
-  initializeQuiz();
-  
-  // Create buttons
-  let sortButton = createButton('Start Sorting');
-  sortButton.position(20, height + 20);
-  sortButton.mousePressed(startSorting);
-  
-  let resetButton = createButton('Reset Array');
-  resetButton.position(120, height + 20);
-  resetButton.mousePressed(resetArray);
-  
-  let quizButton = createButton('Start Quiz');
-  quizButton.position(220, height + 20);
-  quizButton.mousePressed(startQuiz);
-}
-
-function draw() {
-  background(220);
-  
-  if (quizCompleted) {
-    displayResults();
-  } else if (showFeedback) {
-    displayFeedback();
-  } else if (currentQuestion < questions.length) {
-    displayQuestion();
-  } else if (sorting && !sorted) {
-    bubbleSortStep();
-    displayArray();
-  } else {
-    displayArray();
-    displayInfo();
-  }
-}
-
-function displayArray() {
-  // Draw array elements as rectangles
-  for (let i = 0; i < array.length; i++) {
-    let rectHeight = array[i] * rectHeightMultiplier;
-    
-    // Color coding
-    if (i === currentIndex) {
-      fill(255, 0, 0); // Current element - red
-    } else if (i === currentIndex + 1) {
-      fill(255, 150, 0); // Next element - orange
-    } else if (i >= array.length - currentPass) {
-      fill(0, 255, 0); // Already sorted - green
-    } else {
-      fill(0, 150, 255); // Unsorted - blue
-    }
-    
-    // Draw rectangle
-    rect(i * rectWidth, height - rectHeight, rectWidth - 2, rectHeight);
-    
-    // Display value
-    fill(0);
-    textAlign(CENTER, BOTTOM);
-    text(array[i], i * rectWidth + rectWidth/2, height - rectHeight - 5);
-  }
-}
-
-function bubbleSortStep() {
-  // Perform one comparison per frame
-  if (currentIndex < array.length - 1 - currentPass) {
-    comparisons++;
-    
-    // Compare adjacent elements
-    if (array[currentIndex] > array[currentIndex + 1]) {
-      // Swap elements
-      let temp = array[currentIndex];
-      array[currentIndex] = array[currentIndex + 1];
-      array[currentIndex + 1] = temp;
-      swaps++;
-    }
-    
-    currentIndex++;
-  } else {
-    // Move to next pass
-    currentPass++;
-    currentIndex = 0;
-    
-    // Check if sorting is complete
-    if (currentPass >= array.length - 1) {
-      sorted = true;
-    }
-  }
-}
-
-function displayInfo() {
-  fill(0);
-  textSize(16);
-  textAlign(LEFT);
-  
-  text("Bubble Sort Visualization", 20, 30);
-  text("Click 'Start Sorting' to see the algorithm in action", 20, 50);
-  text("Click 'Reset Array' to generate a new random array", 20, 70);
-  text("Click 'Start Quiz' to test your understanding", 20, 90);
-  
-  if (sorting) {
-    text("Pass: " + (currentPass + 1) + "/" + (arraySize - 1), 20, 130);
-    text("Comparisons: " + comparisons, 20, 150);
-    text("Swaps: " + swaps, 20, 170);
-    
-    if (sorted) {
-      text("Sorting Complete!", 20, 190);
-    }
-  }
-}
-
-function startSorting() {
-  sorting = true;
-  sorted = false;
-  currentPass = 0;
-  currentIndex = 0;
-  comparisons = 0;
-  swaps = 0;
-}
-
-function resetArray() {
-  array = [];
-  for (let i = 0; i < arraySize; i++) {
-    array.push(floor(random(1, 20)));
-  }
-  sorting = false;
-  sorted = false;
-  currentPass = 0;
-  currentIndex = 0;
-  comparisons = 0;
-  swaps = 0;
-}
-
-function initializeQuiz() {
-  questions = [
-    {
-      question: "What is the basic principle of bubble sort?",
-      answers: [
-        "Divide the array into smaller parts and sort them separately",
-        "Repeatedly compare adjacent elements and swap if they are in wrong order",
-        "Find the smallest element and place it at the beginning",
-        "Sort elements based on their binary representation"
-      ],
-      correct: 1,
-      explanation: "Bubble sort works by repeatedly stepping through the list, comparing adjacent elements and swapping them if they are in the wrong order. This process continues until the list is sorted."
-    },
-    {
-      question: "When does bubble sort swap two elements?",
-      answers: [
-        "When the first element is smaller than the second",
-        "When the first element is larger than the second",
-        "When both elements are equal",
-        "When elements are in the correct positions"
-      ],
-      correct: 1,
-      explanation: "In bubble sort, elements are swapped when the first element is larger than the second element (for ascending order). This moves larger elements toward the end of the array."
-    },
-    {
-      question: "How many passes are needed to sort an array of n elements using bubble sort?",
-      answers: [
-        "n passes",
-        "n-1 passes",
-        "n/2 passes",
-        "It depends on the initial arrangement"
-      ],
-      correct: 1,
-      explanation: "Bubble sort requires n-1 passes to sort an array of n elements. After n-1 passes, the last element will automatically be in its correct position."
-    },
-    {
-      question: "What is the time complexity of bubble sort in the worst case?",
-      answers: [
-        "O(n)",
-        "O(n log n)",
-        "O(n²)",
-        "O(log n)"
-      ],
-      correct: 2,
-      explanation: "Bubble sort has a worst-case time complexity of O(n²) because it uses nested loops - for each of the n-1 passes, it makes up to n-1 comparisons."
-    },
-    {
-      question: "What happens during each pass of bubble sort?",
-      answers: [
-        "The largest unsorted element 'bubbles up' to its correct position",
-        "The smallest unsorted element 'bubbles down' to its correct position",
-        "All elements are randomly shuffled",
-        "The array is divided into two parts"
-      ],
-      correct: 0,
-      explanation: "During each pass, the largest unsorted element moves to its correct position at the end of the array. This is why the sorted portion grows from the end with each pass."
-    }
-  ];
-}
-
-function startQuiz() {
-  currentQuestion = 0;
-  score = 0;
-  showFeedback = false;
-  selectedAnswer = -1;
-}
-
-function displayQuestion() {
-  let q = questions[currentQuestion];
-  
-  fill(0);
-  textSize(20);
-  textAlign(CENTER);
-  text("Quiz Question " + (currentQuestion + 1) + "/" + questions.length, width/2, 50);
-  
-  textSize(18);
-  text(q.question, width/2, 100);
-  
-  // Display answers as buttons
-  for (let i = 0; i < q.answers.length; i++) {
-    let buttonY = 150 + i * 50;
-    
-    // Highlight selected answer
-    if (i === selectedAnswer) {
-      fill(200, 200, 0);
-    } else {
-      fill(150, 150, 150);
-    }
-    
-    rect(100, buttonY, 600, 40);
-    
-    fill(0);
-    textAlign(LEFT, CENTER);
-    text(q.answers[i], 120, buttonY + 20);
-  }
-  
-  // Display submit button if an answer is selected
-  if (selectedAnswer !== -1) {
-    fill(0, 200, 0);
-    rect(width/2 - 50, 400, 100, 40);
-    fill(255);
-    textAlign(CENTER, CENTER);
-    text("Submit", width/2, 420);
-  }
-}
-
-function displayFeedback() {
-  let q = questions[currentQuestion];
-  
-  fill(0);
-  textSize(20);
-  textAlign(CENTER);
-  text("Question " + (currentQuestion + 1) + " Feedback", width/2, 50);
-  
-  if (selectedAnswer === correctAnswer) {
-    fill(0, 200, 0);
-    text("Correct!", width/2, 100);
-  } else {
-    fill(200, 0, 0);
-    text("Incorrect!", width/2, 100);
-  }
-  
-  fill(0);
-  textSize(16);
-  text(q.explanation, width/2, 150, 600, 200);
-  
-  fill(0, 150, 255);
-  rect(width/2 - 75, 350, 150, 40);
-  fill(255);
-  textAlign(CENTER, CENTER);
-  text("Next Question", width/2, 370);
-}
-
-function displayResults() {
-  fill(0);
-  textSize(30);
-  textAlign(CENTER);
-  text("Quiz Completed!", width/2, 100);
-  
-  textSize(24);
-  text("Your Score: " + score + "/" + questions.length, width/2, 150);
-  
-  let percentage = (score / questions.length) * 100;
-  textSize(20);
-  text("Percentage: " + nf(percentage, 0, 1) + "%", width/2, 200);
-  
-  if (percentage >= 80) {
-    text("Excellent! You have a strong understanding of bubble sort.", width/2, 250, 600, 100);
-  } else if (percentage >= 60) {
-    text("Good job! You understand the basics of bubble sort.", width/2, 250, 600, 100);
-  } else {
-    text("Keep studying! Review how bubble sort works and try again.", width/2, 250, 600, 100);
-  }
-  
-  fill(0, 150, 255);
-  rect(width/2 - 75, 350, 150, 40);
-  fill(255);
-  textAlign(CENTER, CENTER);
-  text("Restart Quiz", width/2, 370);
-}
-
-function mousePressed() {
-  // Handle quiz interactions
-  if (currentQuestion < questions.length && !showFeedback) {
-    // Check if answer was clicked
-    for (let i = 0; i < questions[currentQuestion].answers.length; i++) {
-      let buttonY = 150 + i * 50;
-      if (mouseX > 100 && mouseX < 700 && mouseY > buttonY && mouseY < buttonY + 40) {
-        selectedAnswer = i;
-        return;
-      }
-    }
-    
-    // Check if submit button was clicked
-    if (selectedAnswer !== -1 && mouseX > width/2 - 50 && mouseX < width/2 + 50 && mouseY > 400 && mouseY < 440) {
-      correctAnswer = questions[currentQuestion].correct;
-      showFeedback = true;
-      if (selectedAnswer === correctAnswer) {
-        score++;
-      }
-      return;
-    }
-  }
-  
-  // Handle feedback next button
-  if (showFeedback && mouseX > width/2 - 75 && mouseX < width/2 + 75 && mouseY > 350 && mouseY < 390) {
-    currentQuestion++;
-    selectedAnswer = -1;
-    showFeedback = false;
-    
-    // Check if quiz is completed
-    if (currentQuestion >= questions.length) {
-      quizCompleted = true;
-    }
-    return;
-  }
-  
-  // Handle quiz restart button
-  if (quizCompleted && mouseX > width/2 - 75 && mouseX < width/2 + 75 && mouseY > 350 && mouseY < 390) {
-    quizCompleted = false;
-    currentQuestion = 0;
-    score = 0;
-    selectedAnswer = -1;
-    return;
-  }
-}
-    </script>
+    <div id="welcome-container">
+        <div class="emoji">🎮</div>
+        <h1>Interactive Zone</h1>
+        <p><strong>Ready for Action!</strong></p>
+        <p>Interactive content will appear here when you generate an environment.</p>
+        <div class="waiting-text pulse">WAITING FOR COMMAND...</div>
+    </div>
 </body>
 </html>
