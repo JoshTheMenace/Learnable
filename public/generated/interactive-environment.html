@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Environment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        canvas {
+            border: 4px solid #333;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <h2>🎮 Interactive Visualization</h2>
+    <div id="p5-container"></div>
+
+    <script>
+        // Rock Cycle Interactive Demo
+// Demonstrates the three main rock types and their transformations
+
+let rocks = [];
+let arrows = [];
+let selectedRock = null;
+let showInfo = false;
+
+function setup() {
+  createCanvas(800, 600);
+  
+  // Create rock objects with their properties
+  rocks.push({
+    x: 200,
+    y: 150,
+    type: "Igneous",
+    color: color(200, 100, 100),
+    size: 80,
+    info: "Igneous rocks form when magma or lava cools and solidifies. They can form underground (intrusive) or on the surface (extrusive).",
+    examples: "Examples: Granite, Basalt, Obsidian",
+    texture: "smooth"
+  });
+  
+  rocks.push({
+    x: 600,
+    y: 150,
+    type: "Sedimentary",
+    color: color(220, 200, 150),
+    size: 80,
+    info: "Sedimentary rocks form when sediments (pieces of other rocks, minerals, or organic matter) are compacted and cemented together over time.",
+    examples: "Examples: Sandstone, Limestone, Shale",
+    texture: "layered"
+  });
+  
+  rocks.push({
+    x: 400,
+    y: 450,
+    type: "Metamorphic",
+    color: color(150, 150, 200),
+    size: 80,
+    info: "Metamorphic rocks form when existing rocks are subjected to heat and pressure, changing their mineral composition and structure without melting.",
+    examples: "Examples: Marble, Slate, Gneiss",
+    texture: "banded"
+  });
+  
+  // Create arrows for the rock cycle
+  arrows.push({
+    from: rocks[0],
+    to: rocks[1],
+    label: "Weathering & Erosion"
+  });
+  
+  arrows.push({
+    from: rocks[1],
+    to: rocks[2],
+    label: "Heat & Pressure"
+  });
+  
+  arrows.push({
+    from: rocks[2],
+    to: rocks[0],
+    label: "Melting & Cooling"
+  });
+  
+  // Add additional arrows for completeness
+  arrows.push({
+    from: rocks[0],
+    to: rocks[2],
+    label: "Heat & Pressure"
+  });
+  
+  arrows.push({
+    from: rocks[2],
+    to: rocks[1],
+    label: "Weathering & Erosion"
+  });
+  
+  arrows.push({
+    from: rocks[1],
+    to: rocks[0],
+    label: "Melting & Cooling"
+  });
+}
+
+function draw() {
+  background(240);
+  
+  // Draw title
+  fill(0);
+  textSize(32);
+  textAlign(CENTER);
+  text("The Rock Cycle", width/2, 40);
+  
+  // Draw instructions
+  textSize(16);
+  text("Click on a rock to learn more about it", width/2, 60);
+  
+  // Draw arrows
+  drawArrows();
+  
+  // Draw rocks
+  drawRocks();
+  
+  // Display information if a rock is selected
+  if (showInfo && selectedRock) {
+    displayRockInfo();
+  }
+}
+
+function drawRocks() {
+  for (let rock of rocks) {
+    // Draw rock based on its type and texture
+    push();
+    translate(rock.x, rock.y);
+    
+    // Highlight selected rock
+    if (rock === selectedRock) {
+      fill(255, 255, 0, 100);
+      ellipse(0, 0, rock.size + 20, rock.size + 20);
+    }
+    
+    // Draw rock with appropriate texture
+    drawRockTexture(rock);
+    
+    // Draw rock label
+    fill(0);
+    textSize(16);
+    textAlign(CENTER);
+    text(rock.type, 0, rock.size/2 + 25);
+    
+    pop();
+  }
+}
+
+function drawRockTexture(rock) {
+  switch(rock.texture) {
+    case "smooth":
+      // Igneous rock - smooth texture
+      fill(rock.color);
+      ellipse(0, 0, rock.size, rock.size);
+      // Add some crater-like features
+      fill(150, 70, 70);
+      for (let i = 0; i < 5; i++) {
+        let angle = random(TWO_PI);
+        let dist = random(rock.size/3);
+        let x = cos(angle) * dist;
+        let y = sin(angle) * dist;
+        ellipse(x, y, random(5, 15), random(5, 15));
+      }
+      break;
+      
+    case "layered":
+      // Sedimentary rock - layered texture
+      fill(rock.color);
+      rectMode(CENTER);
+      rect(0, 0, rock.size, rock.size);
+      // Draw layers
+      noFill();
+      stroke(180, 160, 120);
+      strokeWeight(2);
+      for (let i = -rock.size/2 + 10; i < rock.size/2; i += 15) {
+        line(-rock.size/2, i, rock.size/2, i);
+      }
+      noStroke();
+      break;
+      
+    case "banded":
+      // Metamorphic rock - banded texture
+      fill(rock.color);
+      ellipse(0, 0, rock.size, rock.size);
+      // Draw bands
+      noFill();
+      stroke(120, 120, 170);
+      strokeWeight(3);
+      for (let i = -rock.size/2 + 10; i < rock.size/2; i += 15) {
+        let w = rock.size - abs(i) * 1.5;
+        ellipse(0, i, w, 10);
+      }
+      noStroke();
+      break;
+  }
+}
+
+function drawArrows() {
+  for (let arrow of arrows) {
+    let fromX = arrow.from.x;
+    let fromY = arrow.from.y;
+    let toX = arrow.to.x;
+    let toY = arrow.to.y;
+    
+    // Draw arrow line
+    stroke(0);
+    strokeWeight(2);
+    line(fromX, fromY, toX, toY);
+    
+    // Draw arrowhead
+    let angle = atan2(toY - fromY, toX - fromX);
+    push();
+    translate(toX, toY);
+    rotate(angle);
+    fill(0);
+    noStroke();
+    triangle(0, 0, -10, -5, -10, 5);
+    pop();
+    
+    // Draw label
+    fill(0);
+    textSize(12);
+    textAlign(CENTER);
+    let midX = (fromX + toX) / 2;
+    let midY = (fromY + toY) / 2;
+    text(arrow.label, midX, midY - 10);
+  }
+  noStroke();
+}
+
+function displayRockInfo() {
+  // Draw info box
+  fill(255);
+  stroke(0);
+  rect(50, 100, width - 100, height - 150);
+  
+  // Display rock information
+  fill(0);
+  textSize(24);
+  textAlign(CENTER);
+  text(selectedRock.type + " Rocks", width/2, 140);
+  
+  textSize(16);
+  textAlign(LEFT);
+  text(selectedRock.info, 80, 180, width - 160, 150);
+  
+  textSize(18);
+  text(selectedRock.examples, 80, 300, width - 160, 100);
+  
+  // Draw formation process visualization
+  drawFormationProcess(selectedRock.type);
+  
+  // Draw close button
+  fill(200);
+  rect(width - 80, 110, 20, 20);
+  fill(0);
+  textSize(16);
+  text("X", width - 70, 125);
+}
+
+function drawFormationProcess(type) {
+  textSize(18);
+  text("Formation Process:", 80, 370);
+  
+  switch(type) {
+    case "Igneous":
+      // Draw magma cooling visualization
+      fill(255, 100, 100);
+      ellipse(200, 420, 50, 50);
+      text("Magma/Lava", 200, 470);
+      
+      fill(200, 100, 100);
+      ellipse(350, 420, 50, 50);
+      text("Cooling", 350, 470);
+      
+      fill(150, 70, 70);
+      ellipse(500, 420, 50, 50);
+      text("Igneous Rock", 500, 470);
+      
+      // Draw arrows
+      stroke(0);
+      line(225, 420, 325, 420);
+      line(375, 420, 475, 420);
+      noStroke();
+      break;
+      
+    case "Sedimentary":
+      // Draw sedimentary formation visualization
+      fill(220, 200, 150);
+      rectMode(CENTER);
+      rect(200, 420, 50, 50);
+      text("Weathering", 200, 470);
+      
+      fill(200, 180, 130);
+      rect(350, 420, 50, 50);
+      text("Deposition", 350, 470);
+      
+      fill(180, 160, 120);
+      rect(500, 420, 50, 50);
+      text("Sedimentary Rock", 500, 470);
+      
+      // Draw arrows
+      stroke(0);
+      line(225, 420, 325, 420);
+      line(375, 420, 475, 420);
+      noStroke();
+      break;
+      
+    case "Metamorphic":
+      // Draw metamorphic formation visualization
+      fill(150, 150, 200);
+      ellipse(150, 420, 50, 50);
+      text("Rock", 150, 470);
+      
+      fill(200, 100, 100);
+      triangle(300, 395, 320, 445, 280, 445);
+      text("Heat", 300, 470);
+      
+      fill(100);
+      rectMode(CENTER);
+      rect(450, 420, 50, 50);
+      text("Pressure", 450, 470);
+      
+      fill(120, 120, 170);
+      ellipse(600, 420, 50, 50);
+      text("Metamorphic Rock", 600, 470);
+      
+      // Draw arrows
+      stroke(0);
+      line(175, 420, 275, 420);
+      line(320, 420, 425, 420);
+      line(475, 420, 575, 420);
+      noStroke();
+      break;
+  }
+}
+
+function mousePressed() {
+  // Check if close button was clicked
+  if (showInfo && mouseX > width - 80 && mouseX < width - 60 && mouseY > 110 && mouseY < 130) {
+    showInfo = false;
+    selectedRock = null;
+    return;
+  }
+  
+  // Check if a rock was clicked
+  for (let rock of rocks) {
+    let d = dist(mouseX, mouseY, rock.x, rock.y);
+    if (d < rock.size/2) {
+      selectedRock = rock;
+      showInfo = true;
+      return;
+    }
+  }
+  
+  // If no rock was clicked, hide info
+  showInfo = false;
+  selectedRock = null;
+}
+
+function keyPressed() {
+  // Press 'R' to reset view
+  if (key === 'r' || key === 'R') {
+    showInfo = false;
+    selectedRock = null;
+  }
+  
+  // Press '1', '2', or '3' to select rock types
+  if (key === '1') {
+    selectedRock = rocks[0];
+    showInfo = true;
+  } else if (key === '2') {
+    selectedRock = rocks[1];
+    showInfo = true;
+  } else if (key === '3') {
+    selectedRock = rocks[2];
+    showInfo = true;
+  }
+}
+    </script>
+</body>
+</html>

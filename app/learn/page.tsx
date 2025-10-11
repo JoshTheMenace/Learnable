@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ChatInterface from '@/components/chat/ChatInterface';
-import ContentWindow from '@/components/content/ContentWindow';
+import FileBasedContentWindow from '@/components/content/FileBasedContentWindow';
 
 interface Message {
   id: string;
@@ -296,10 +296,22 @@ export default function LearnPage() {
     setMessages([]);
   }, [topic]);
 
+  // Reset content function
+  const handleReset = async () => {
+    try {
+      await fetch('/api/reset-content', { method: 'POST' });
+      setMessages([]);
+      setCurrentLessonSection('');
+      setCurrentEnvironmentCode('');
+    } catch (error) {
+      console.error('Failed to reset content:', error);
+    }
+  };
+
   return (
     <div className="h-screen bg-yellow-300 flex">
-      {/* Chat Interface - Left Side */}
-      <div className="w-1/2 h-full border-r-8 border-black">
+      {/* Chat Interface - Left Side (25% width) */}
+      <div className="w-1/4 h-full border-r-8 border-black">
         <ChatInterface
           messages={messages}
           input={input}
@@ -310,11 +322,18 @@ export default function LearnPage() {
         />
       </div>
 
-      {/* Content Window - Right Side */}
-      <div className="w-1/2 h-full">
-        <ContentWindow
-          lessonContent={currentLessonSection}
-          environmentCode={currentEnvironmentCode}
+      {/* Environment - Center (50% width) */}
+      <div className="w-1/2 h-full border-r-8 border-black">
+        <FileBasedContentWindow
+          showEnvironmentOnly={true}
+          onReset={handleReset}
+        />
+      </div>
+
+      {/* Lesson Content - Right Side (25% width) */}
+      <div className="w-1/4 h-full">
+        <FileBasedContentWindow
+          showLessonOnly={true}
         />
       </div>
     </div>
