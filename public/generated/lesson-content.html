@@ -1,0 +1,69 @@
+<div class="lesson-intro" style="font-family:Arial,Helvetica,sans-serif; line-height:1.6; color:#111; background:#fff; padding:2rem;">
+
+    <h2 class="neo-heading" style="font-size:2.2rem; font-weight:900; color:#000; margin-bottom:0.5rem; border-bottom:4px solid #000;">
+        Introduction to Bubble Sort
+    </h2>
+
+    <p style="font-size:1.1rem; margin-top:0.5rem;">
+        Bubble Sort is one of the simplest sorting algorithms and a perfect starting point for anyone new to algorithmic thinking. 
+        It works by repeatedly stepping through a list, comparing adjacent items and swapping them if they are in the wrong order. 
+        Think of it like the way bubbles rise to the surface of water – the largest values “float” to the top of the list after each pass.
+    </p>
+
+    <h3 class="neo-subheading" style="font-size:1.6rem; font-weight:800; color:#222; margin-top:1.5rem; border-left:6px solid #000; padding-left:0.4rem;">
+        How Bubble Sort Works
+    </h3>
+
+    <p>
+        The algorithm follows a very straightforward process:
+    </p>
+
+    <ul style="margin-left:1.5rem; list-style-type:disc;">
+        <li><strong>Compare</strong> each pair of adjacent elements.</li>
+        <li><strong>Swap</strong> them if they are out of order.</li>
+        <li>After each full pass, the largest unsorted element is placed in its final position.</li>
+        <li>Repeat the passes until no swaps are needed.</li>
+    </ul>
+
+    <h3 class="neo-subheading" style="font-size:1.6rem; font-weight:800; color:#222; margin-top:1.5rem; border-left:6px solid #000; padding-left:0.4rem;">
+        A Simple Python Example
+    </h3>
+
+    <pre style="background:#f4f4f4; padding:1rem; border:2px solid #000; overflow:auto;">
+<code>def bubble_sort(arr):
+    n = len(arr)
+    # Traverse through all array elements
+    for i in range(n):
+        # Last i elements are already sorted
+        for j in range(0, n-i-1):
+            # Swap if the element found is greater
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+
+# Example usage
+numbers = [64, 34, 25, 12, 22, 11, 90]
+print(bubble_sort(numbers))
+</code>
+    </pre>
+
+    <p>
+        Run the code above and watch how the list gradually becomes sorted after each pass. 
+        Even though Bubble Sort isn’t the fastest for large datasets, its clarity makes it an excellent teaching tool.
+    </p>
+
+    <h3 class="neo-subheading" style="font-size:1.6rem; font-weight:800; color:#222; margin-top:1.5rem; border-left:6px solid #000; padding-left:0.4rem;">
+        Try It Yourself!
+    </h3>
+
+    <p>
+        Ready to see Bubble Sort in action? Choose one of the interactive options below:
+    </p>
+
+    <ul style="margin-left:1.5rem; list-style-type:circle;">
+        <li>[Watch Animation](button:visualization:Step‑by‑step visualisation of Bubble Sort)</li>
+        <li>[Practice Coding](button:exercise:Write your own Bubble Sort function in your preferred language)</li>
+        <li>[Quiz Me!](button:quiz:Test your understanding of how Bubble Sort works)</li>
+    </ul>
+
+</div>

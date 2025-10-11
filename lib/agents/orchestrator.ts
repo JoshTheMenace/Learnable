@@ -14,19 +14,25 @@ const generateLessonPlanTool = tool(
   },
   async ({ topic, section, difficulty }) => {
     const prompt = `Create a ${section} section for a ${difficulty} level lesson about ${topic}.
-    Format the response as clear, educational Markdown content with:
-    - Appropriate headings (##, ###)
-    - Clear explanations
+    Format the response as clean, educational HTML content with:
+    - Appropriate headings (<h2>, <h3>) with neo-brutalist styling
+    - Clear explanations in <p> tags
     - Examples where relevant
-    - Bullet points for key concepts
-    - Code blocks if applicable
+    - Bullet points using <ul> and <li> tags
+    - Code blocks using <pre> and <code> tags if applicable
     - Interactive elements using special button syntax: [Button Text](button:type:description)
       - Available types: demo, quiz, exercise, visualization, simulation
       - Example: [Explore Rock Formation](button:visualization:Show how different rock types form over time)
       - Example: [Take Quiz](button:quiz:Test your knowledge about rock classification)
       - Example: [Try Exercise](button:exercise:Practice identifying rock samples)
 
-    Include 2-3 interactive buttons throughout the lesson that would help students engage with the material.
+    Use neo-brutalist styling with:
+    - Bold, chunky headings
+    - High contrast colors
+    - Strong visual hierarchy
+    - Include 2-3 interactive buttons throughout the lesson
+
+    Return ONLY the HTML content (no DOCTYPE, html, head, or body tags - just the content div).
     Make it engaging and interactive for learning.`;
 
     const result = await generateText({

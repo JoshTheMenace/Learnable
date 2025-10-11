@@ -29,8 +29,8 @@ function writeContentToFile(filename: string, content: string) {
   }
 }
 
-function writeLessonContent(markdownContent: string) {
-  writeContentToFile('lesson-content.md', markdownContent);
+function writeLessonContent(htmlContent: string) {
+  writeContentToFile('lesson-content.html', htmlContent);
 }
 
 function writeInteractiveEnvironment(p5Code: string) {

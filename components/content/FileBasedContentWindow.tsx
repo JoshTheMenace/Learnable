@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
 import EnvironmentButton from './EnvironmentButton';
 
 interface FileBasedContentWindowProps {
@@ -32,7 +31,7 @@ export default function FileBasedContentWindow({
   const fetchContent = async () => {
     try {
       // Check lesson content
-      const lessonResponse = await fetch(`/generated/lesson-content.md`);
+      const lessonResponse = await fetch(`/generated/lesson-content.html`);
       if (lessonResponse.ok) {
         const content = await lessonResponse.text();
 
@@ -204,7 +203,19 @@ export default function FileBasedContentWindow({
         </div>
 
         {/* Environment Full Screen */}
-        <div className="flex-1 bg-white">
+        <div className="flex-1 bg-white relative">
+          {/* Loading overlay for environment */}
+          {isAIGenerating && (
+            <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10">
+              <div className="bg-yellow-300 border-8 border-black p-8 text-center">
+                <div className="text-4xl font-black text-black mb-4">⚡ GENERATING ⚡</div>
+                <div className="text-lg font-bold text-black">Creating interactive content...</div>
+                <div className="flex justify-center mt-4">
+                  <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin"></div>
+                </div>
+              </div>
+            </div>
+          )}
           <iframe
             key={environmentKey}
             src={`/generated/interactive-environment.html`}
@@ -228,8 +239,108 @@ export default function FileBasedContentWindow({
         </div>
 
         {/* Lesson Content */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="prose prose-sm max-w-none">
+        <div className="flex-1 overflow-y-auto p-4 relative">
+          {/* Loading overlay for lesson content */}
+          {isAIGenerating && !lessonContent && (
+            <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10">
+              <div className="bg-green-400 border-8 border-black p-8 text-center">
+                <div className="text-4xl font-black text-black mb-4">📚 WRITING 📚</div>
+                <div className="text-lg font-bold text-black">Generating lesson content...</div>
+                <div className="flex justify-center mt-4">
+                  <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin"></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="lesson-content">
+            <style jsx>{`
+              .neo-brutalist-content h1 {
+                font-size: 2rem;
+                font-weight: 900;
+                color: #000;
+                text-transform: uppercase;
+                border-bottom: 4px solid #000;
+                padding-bottom: 0.5rem;
+                margin-bottom: 1rem;
+                letter-spacing: -1px;
+              }
+              .neo-brutalist-content h2 {
+                font-size: 1.5rem;
+                font-weight: 900;
+                color: #000;
+                text-transform: uppercase;
+                border-bottom: 2px solid #000;
+                padding-bottom: 0.25rem;
+                margin: 1.5rem 0 0.75rem 0;
+                letter-spacing: -0.5px;
+              }
+              .neo-brutalist-content h3 {
+                font-size: 1.25rem;
+                font-weight: 900;
+                color: #000;
+                text-transform: uppercase;
+                margin: 1rem 0 0.5rem 0;
+              }
+              .neo-brutalist-content p {
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: #000;
+                line-height: 1.6;
+                margin-bottom: 1rem;
+              }
+              .neo-brutalist-content ul {
+                list-style: none;
+                margin: 1rem 0;
+                padding: 0;
+              }
+              .neo-brutalist-content li {
+                font-weight: 600;
+                color: #000;
+                margin-bottom: 0.5rem;
+                padding-left: 1.5rem;
+                position: relative;
+              }
+              .neo-brutalist-content li:before {
+                content: "▶";
+                position: absolute;
+                left: 0;
+                font-weight: 900;
+                color: #FF00FF;
+              }
+              .neo-brutalist-content code {
+                background: #FFFF00;
+                border: 2px solid #000;
+                padding: 0.25rem 0.5rem;
+                font-family: 'Courier New', monospace;
+                font-weight: 700;
+                color: #000;
+                font-size: 0.8rem;
+              }
+              .neo-brutalist-content pre {
+                background: #000;
+                color: #00FF00;
+                border: 4px solid #000;
+                padding: 1rem;
+                font-family: 'Courier New', monospace;
+                font-weight: 700;
+                overflow-x: auto;
+                margin: 1rem 0;
+                box-shadow: 4px 4px 0px #FF00FF;
+              }
+              .neo-brutalist-content strong {
+                font-weight: 900;
+                color: #FF00FF;
+              }
+              .neo-brutalist-content em {
+                font-style: normal;
+                font-weight: 900;
+                background: #00FF00;
+                color: #000;
+                padding: 0.1rem 0.3rem;
+                border: 2px solid #000;
+              }
+            `}</style>
             {lessonContent ? (
               <div>
                 {parseEnvironmentButtons(lessonContent).map((part, index) => {
@@ -246,48 +357,11 @@ export default function FileBasedContentWindow({
                     );
                   } else {
                     return (
-                      <ReactMarkdown
+                      <div
                         key={index}
-                        components={{
-                          h1: ({ children }) => (
-                            <h1 className="text-2xl font-black border-b-4 border-black pb-2 mb-4">
-                              {children}
-                            </h1>
-                          ),
-                          h2: ({ children }) => (
-                            <h2 className="text-lg font-black border-b-2 border-black pb-1 mb-2">
-                              {children}
-                            </h2>
-                          ),
-                          h3: ({ children }) => (
-                            <h3 className="text-base font-black mb-2">{children}</h3>
-                          ),
-                          p: ({ children }) => (
-                            <p className="text-sm font-medium mb-3 leading-relaxed">{children}</p>
-                          ),
-                          code: ({ children }) => (
-                            <code className="border border-black px-1 py-0.5 font-mono text-xs font-bold">
-                              {children}
-                            </code>
-                          ),
-                          pre: ({ children }) => (
-                            <pre className="bg-gray-900 text-green-400 border-2 border-black p-2 font-mono text-xs font-bold overflow-x-auto">
-                              {children}
-                            </pre>
-                          ),
-                          ul: ({ children }) => (
-                            <ul className="list-none space-y-1 mb-3 text-sm">{children}</ul>
-                          ),
-                          li: ({ children }) => (
-                            <li className="flex items-start">
-                              <span className="font-black mr-1">•</span>
-                              <span className="font-medium">{children}</span>
-                            </li>
-                          ),
-                        }}
-                      >
-                        {part.content}
-                      </ReactMarkdown>
+                        dangerouslySetInnerHTML={{ __html: part.content }}
+                        className="neo-brutalist-content"
+                      />
                     );
                   }
                 })}
