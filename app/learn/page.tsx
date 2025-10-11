@@ -22,10 +22,44 @@ export default function LearnPage() {
   const [currentLessonSection, setCurrentLessonSection] = useState('');
   const [currentEnvironmentCode, setCurrentEnvironmentCode] = useState('');
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(0);
   const initializationRef = useRef(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
+  };
+
+  // Function to check if a message is similar to recent messages
+  const isSimilarMessage = (newMessage: string, recentMessages: Message[]): boolean => {
+    if (recentMessages.length === 0) return false;
+
+    const lastTwoMessages = recentMessages.slice(-2).filter(msg => msg.role === 'assistant');
+
+    for (const msg of lastTwoMessages) {
+      // Simple similarity check - if messages share key phrases
+      const newWords = newMessage.toLowerCase().split(' ');
+      const existingWords = msg.content.toLowerCase().split(' ');
+
+      // Check for common phrases that indicate similar intent
+      const commonPhrases = [
+        'create', 'lesson', 'plan', 'visualization', 'interactive',
+        'help', 'learn', 'tutorial', 'generate'
+      ];
+
+      let matchCount = 0;
+      for (const phrase of commonPhrases) {
+        if (newWords.includes(phrase) && existingWords.includes(phrase)) {
+          matchCount++;
+        }
+      }
+
+      // If more than 3 common key phrases, consider it similar
+      if (matchCount >= 3 && Math.abs(newMessage.length - msg.content.length) < 100) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,6 +107,7 @@ export default function LearnPage() {
         content: '',
       };
 
+      // Only add assistant message if it won't be a duplicate
       setMessages(prev => [...prev, assistantMessage]);
 
       while (true) {
@@ -89,13 +124,22 @@ export default function LearnPage() {
 
               if (data.type === 'text') {
                 assistantContent += data.content;
-                setMessages(prev =>
-                  prev.map(msg =>
-                    msg.id === assistantMessage.id
-                      ? { ...msg, content: assistantContent }
-                      : msg
-                  )
-                );
+
+                // Check if this content is similar to recent messages
+                const updatedContent = assistantContent;
+
+                setMessages(prev => {
+                  // Only update if not similar to recent messages
+                  const currentMessages = prev.filter(msg => msg.id !== assistantMessage.id);
+                  if (!isSimilarMessage(updatedContent, currentMessages)) {
+                    return prev.map(msg =>
+                      msg.id === assistantMessage.id
+                        ? { ...msg, content: updatedContent }
+                        : msg
+                    );
+                  }
+                  return prev;
+                });
               } else if (data.type === 'tool_use') {
                 // Handle tool usage - this could update lesson content or environment code
                 console.log('Tool used:', data.tool_name, data.input);
@@ -123,6 +167,8 @@ export default function LearnPage() {
                 }
               } else if (data.type === 'done') {
                 console.log('Conversation complete:', data.result);
+                // Trigger immediate content refresh when AI is done
+                setForceRefresh(Date.now());
               }
             } catch (e) {
               // Skip invalid JSON
@@ -206,13 +252,22 @@ export default function LearnPage() {
 
                 if (data.type === 'text') {
                   assistantContent += data.content;
-                  setMessages(prev =>
-                    prev.map(msg =>
-                      msg.id === assistantMessage.id
-                        ? { ...msg, content: assistantContent }
-                        : msg
-                    )
-                  );
+
+                  // Check if this content is similar to recent messages
+                  const updatedContent = assistantContent;
+
+                  setMessages(prev => {
+                    // Only update if not similar to recent messages
+                    const currentMessages = prev.filter(msg => msg.id !== assistantMessage.id);
+                    if (!isSimilarMessage(updatedContent, currentMessages)) {
+                      return prev.map(msg =>
+                        msg.id === assistantMessage.id
+                          ? { ...msg, content: updatedContent }
+                          : msg
+                      );
+                    }
+                    return prev;
+                  });
                 } else if (data.type === 'tool_result') {
                   console.log('Tool result received:', data);
 
@@ -267,6 +322,10 @@ export default function LearnPage() {
                       }
                     }
                   }
+                } else if (data.type === 'done') {
+                  console.log('Auto-initialization complete:', data.result);
+                  // Trigger immediate content refresh when AI is done
+                  setForceRefresh(Date.now());
                 }
               } catch (e) {
                 // Skip invalid JSON
@@ -327,6 +386,8 @@ export default function LearnPage() {
         <FileBasedContentWindow
           showEnvironmentOnly={true}
           onReset={handleReset}
+          isAIGenerating={isLoading}
+          forceRefresh={forceRefresh}
         />
       </div>
 
@@ -334,6 +395,8 @@ export default function LearnPage() {
       <div className="w-1/4 h-full">
         <FileBasedContentWindow
           showLessonOnly={true}
+          isAIGenerating={isLoading}
+          forceRefresh={forceRefresh}
         />
       </div>
     </div>

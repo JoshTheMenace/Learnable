@@ -7,43 +7,48 @@ interface FileBasedContentWindowProps {
   showEnvironmentOnly?: boolean;
   showLessonOnly?: boolean;
   onReset?: () => void;
+  isAIGenerating?: boolean; // New prop to indicate if AI is actively generating
+  forceRefresh?: number; // New prop to trigger immediate refresh
 }
 
 export default function FileBasedContentWindow({
   showEnvironmentOnly = false,
   showLessonOnly = false,
-  onReset
+  onReset,
+  isAIGenerating = false,
+  forceRefresh
 }: FileBasedContentWindowProps) {
   const [lessonContent, setLessonContent] = useState('');
   const [environmentKey, setEnvironmentKey] = useState(Date.now());
   const [previousLessonContent, setPreviousLessonContent] = useState('');
   const [previousEnvironmentContent, setPreviousEnvironmentContent] = useState('');
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [lastCheckTime, setLastCheckTime] = useState(Date.now());
 
   // Fetch and check for content updates
   const fetchContent = async () => {
     try {
       // Check lesson content
-      const lessonResponse = await fetch(`/generated/lesson-content.md?t=${Date.now()}`);
+      const lessonResponse = await fetch(`/generated/lesson-content.md`);
       if (lessonResponse.ok) {
         const content = await lessonResponse.text();
 
         // Only update if content actually changed
-        if (content !== previousLessonContent && content !== lessonContent) {
-          console.log('📚 Lesson content changed! Updating...');
+        if (content !== previousLessonContent) {
+          console.log('[LESSON] Content changed! Updating...');
           setLessonContent(content);
           setPreviousLessonContent(content);
         }
       }
 
       // Check environment content separately
-      const envResponse = await fetch(`/generated/interactive-environment.html?t=${Date.now()}`);
+      const envResponse = await fetch(`/generated/interactive-environment.html`);
       if (envResponse.ok) {
         const envContent = await envResponse.text();
 
         // Only refresh iframe if environment content actually changed
         if (envContent !== previousEnvironmentContent) {
-          console.log('🎮 Environment content changed! Refreshing iframe...');
+          console.log('[ENV] Content changed! Refreshing iframe...');
           setPreviousEnvironmentContent(envContent);
           setEnvironmentKey(Date.now()); // This will trigger iframe refresh only when needed
         }
@@ -53,21 +58,40 @@ export default function FileBasedContentWindow({
     }
   };
 
-  // Check for updates every 2 seconds (reduced frequency)
+  // Load initial content and set up conditional polling
   useEffect(() => {
     fetchContent();
+  }, []);
 
-    // Start checking for updates
-    checkIntervalRef.current = setInterval(() => {
-      fetchContent();
-    }, 2000); // Check every 2 seconds instead of 1
+  // Only poll when AI is actively generating content
+  useEffect(() => {
+    if (isAIGenerating) {
+      // Start polling while AI is generating
+      checkIntervalRef.current = setInterval(() => {
+        fetchContent();
+      }, 2000); // Check every 2 seconds while generating
+    } else {
+      // Stop polling when AI is done
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+        checkIntervalRef.current = null;
+      }
+    }
 
     return () => {
       if (checkIntervalRef.current) {
         clearInterval(checkIntervalRef.current);
       }
     };
-  }, []);
+  }, [isAIGenerating]);
+
+  // Force refresh when forceRefresh prop changes
+  useEffect(() => {
+    if (forceRefresh) {
+      console.log('[REFRESH] Force refresh triggered!');
+      fetchContent();
+    }
+  }, [forceRefresh]);
 
   // Manual refresh function
   const refreshContent = () => {
@@ -82,23 +106,30 @@ export default function FileBasedContentWindow({
       <div className="h-full bg-white border-8 border-black flex flex-col">
         {/* Header */}
         <div className="bg-purple-600 border-b-8 border-black p-4 flex justify-between items-center">
-          <h2 className="text-2xl font-black text-white">
-            🎮 INTERACTIVE ENVIRONMENT
-          </h2>
+          <div>
+            <h2 className="text-2xl font-black text-white">
+              [ENV] INTERACTIVE ENVIRONMENT
+            </h2>
+            {isAIGenerating && (
+              <p className="text-purple-200 text-sm font-bold">
+                [AI] Generating content...
+              </p>
+            )}
+          </div>
           <div className="flex gap-2">
             {onReset && (
               <button
                 onClick={onReset}
                 className="px-4 py-2 bg-red-500 text-white font-black border-4 border-black hover:bg-red-600"
               >
-                🔄 RESET
+                RESET
               </button>
             )}
             <button
               onClick={refreshContent}
               className="px-4 py-2 bg-yellow-400 text-black font-black border-4 border-black hover:bg-yellow-300"
             >
-              🔄 REFRESH
+              REFRESH
             </button>
           </div>
         </div>
@@ -107,7 +138,7 @@ export default function FileBasedContentWindow({
         <div className="flex-1 bg-white">
           <iframe
             key={environmentKey}
-            src={`/generated/interactive-environment.html?t=${environmentKey}`}
+            src={`/generated/interactive-environment.html`}
             className="w-full h-full border-none"
             title="Interactive Environment"
           />
@@ -123,7 +154,7 @@ export default function FileBasedContentWindow({
         {/* Header */}
         <div className="bg-green-600 border-b-8 border-black p-4">
           <h2 className="text-xl font-black text-white">
-            📚 LESSON CONTENT
+            [LESSON] CONTENT
           </h2>
         </div>
 
@@ -164,7 +195,7 @@ export default function FileBasedContentWindow({
                   ),
                   li: ({ children }) => (
                     <li className="flex items-start">
-                      <span className="font-black mr-1">▸</span>
+                      <span className="font-black mr-1">•</span>
                       <span className="font-medium">{children}</span>
                     </li>
                   ),
@@ -175,7 +206,7 @@ export default function FileBasedContentWindow({
             ) : (
               <div className="flex items-center justify-center h-32">
                 <div className="text-center">
-                  <div className="text-3xl font-black text-gray-300 mb-2">📁</div>
+                  <div className="text-3xl font-black text-gray-300 mb-2">[...]</div>
                   <p className="text-sm font-bold text-gray-500">
                     Waiting for lesson content...
                   </p>

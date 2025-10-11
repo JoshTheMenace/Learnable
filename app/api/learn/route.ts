@@ -84,13 +84,16 @@ ${chatHistory.map(msg => `${msg.role.toUpperCase()}: ${msg.content}`).join('\n')
 
 USER REQUEST: ${userInput}
 
-Please help the user learn by:
-1. For new topics: Use generate_lesson_plan to create educational content
-2. For visualizations: Use generate_interactive_environment to create p5.js code
-3. For code modifications: Use update_interactive_environment with current code
-4. For questions: Use answer_question_directly for explanations
+IMPORTANT: Be EXTREMELY CONCISE. Only call each tool ONCE per request.
 
-Keep your responses brief and professional. The content will appear in the content window, so just acknowledge what you're creating without describing it in detail.`;
+Based on the user's request, choose ONE appropriate action:
+- New topic? Call generate_lesson_plan ONCE
+- Need visualization? Call generate_interactive_environment ONCE
+- Update existing code? Call update_interactive_environment ONCE
+- Question? Call answer_question_directly ONCE
+
+Do NOT repeat yourself. Do NOT say what you're going to do multiple times.
+After calling a tool, give a SINGLE brief confirmation (max 2 sentences).`;
 
     // Use Claude Agent SDK to query with MCP tools
     const orchestratorQuery = query({
@@ -99,28 +102,23 @@ Keep your responses brief and professional. The content will appear in the conte
         mcpServers: {
           'tutor-tools': tutorMcpServer,
         },
-        systemPrompt: `You are an AI tutor orchestrator. You have access to specialized tools for education:
+        systemPrompt: `You are an AI tutor. Be CONCISE and DIRECT.
 
-AVAILABLE TOOLS:
-- generate_lesson_plan: Create educational content in Markdown format
-- generate_interactive_environment: Create p5.js visualizations and simulations
+AVAILABLE TOOLS (use ONLY ONE per request):
+- generate_lesson_plan: Create educational content in Markdown
+- generate_interactive_environment: Create p5.js visualizations
 - update_interactive_environment: Modify existing p5.js code
-- answer_question_directly: Provide direct explanations
+- answer_question_directly: Answer questions directly
 
-INSTRUCTIONS:
-- For new topics: Start with generate_lesson_plan to create educational content
-- For visualizations: Use generate_interactive_environment to create p5.js code
-- For code changes: Use update_interactive_environment with the current code
-- For questions: Use answer_question_directly for explanations
-- Always be educational, engaging, and encourage learning
-- Make lessons interactive and visual when possible
-- DO NOT use any other tools like TodoWrite, Read, Write, etc.
-- ONLY use the educational tools provided above
-
-Analyze the user's request and use the appropriate tool(s).`,
+RULES:
+1. Call ONLY ONE tool per request
+2. Give a brief 1-2 sentence response after using a tool
+3. DO NOT explain what you're going to do beforehand
+4. DO NOT repeat yourself
+5. Be educational but concise`,
         permissionMode: 'bypassPermissions',
         allowedTools: ['generate_lesson_plan', 'generate_interactive_environment', 'update_interactive_environment', 'answer_question_directly'],
-        maxTurns: 5,
+        maxTurns: 2,
         //temperature: 0.7,
       },
     });
