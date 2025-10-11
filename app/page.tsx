@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [topic, setTopic] = useState('');
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (topic.trim()) {
-      // TODO: Navigate to learning interface
-      console.log('Starting lesson on:', topic);
+      // Navigate to learning interface with the topic as a query parameter
+      router.push(`/learn?topic=${encodeURIComponent(topic)}`);
     }
   };
 
