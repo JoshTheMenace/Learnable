@@ -49,11 +49,14 @@ export default function FileBasedContentWindow({
       if (envResponse.ok) {
         const envContent = await envResponse.text();
 
-        // Only refresh iframe if environment content actually changed
-        if (envContent !== previousEnvironmentContent) {
+        // Only refresh iframe if environment content actually changed AND it's not just the default template
+        if (envContent !== previousEnvironmentContent && previousEnvironmentContent !== '') {
           console.log('[ENV] Content changed! Refreshing iframe...');
           setPreviousEnvironmentContent(envContent);
           setEnvironmentKey(Date.now()); // This will trigger iframe refresh only when needed
+        } else if (previousEnvironmentContent === '') {
+          // First load - just set the content without refreshing
+          setPreviousEnvironmentContent(envContent);
         }
       }
     } catch (error) {
@@ -72,7 +75,7 @@ export default function FileBasedContentWindow({
       // Start polling while AI is generating
       checkIntervalRef.current = setInterval(() => {
         fetchContent();
-      }, 2000); // Check every 2 seconds while generating
+      }, 3000); // Check every 3 seconds while generating (reduced frequency)
     } else {
       // Stop polling when AI is done
       if (checkIntervalRef.current) {
@@ -93,7 +96,7 @@ export default function FileBasedContentWindow({
     if (forceRefresh) {
       console.log('[REFRESH] Force refresh triggered!');
       setPreviousLessonContent(''); // Force refresh by clearing cache
-      setPreviousEnvironmentContent(''); // Force refresh by clearing cache
+      // Don't clear environment content cache to prevent unnecessary iframe refreshes
       fetchContent();
     }
   }, [forceRefresh]);

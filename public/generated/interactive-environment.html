@@ -4,313 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Environment</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <style>
         body {
             margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            background: #f0f0f0;
+            padding: 0;
+            font-family: 'Arial Black', 'Arial', sans-serif;
+            background: #FFFF00;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
         }
-        canvas {
-            border: 4px solid #333;
-            background: white;
+
+        .container {
+            text-align: center;
+            background: #FFFFFF;
+            border: 8px solid #000000;
+            padding: 60px 40px;
+            box-shadow: 12px 12px 0px #000000;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            right: -12px;
+            bottom: -12px;
+            background: #FF00FF;
+            z-index: -1;
+            border: 4px solid #000000;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin: 0 0 30px 0;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            line-height: 0.9;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #FF00FF;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #000000;
+            margin: 15px 0;
+            line-height: 1.4;
+        }
+
+        .icon {
+            font-size: 5rem;
+            margin: 20px 0;
+            display: block;
+        }
+
+        .status {
+            background: #00FF00;
+            border: 4px solid #000000;
+            padding: 15px 25px;
+            margin: 25px 0;
+            font-weight: 900;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 4px 4px 0px #000000;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
-    <h2>🎮 Interactive Visualization</h2>
-    <div id="p5-container"></div>
+    <div class="container">
+        <div class="icon">🎮</div>
+        <h1>Interactive<br>Environment</h1>
+        <div class="subtitle">[WAITING FOR CONTENT]</div>
+        <p>Click on interactive buttons in the lesson to generate visualizations, simulations, quizzes, and more!</p>
+        <div class="status">READY TO LEARN</div>
+    </div>
 
-    <script>
-        let rocks = [];
-let currentRockIndex = 0;
-let score = 0;
-let totalRocks = 0;
-let showFeedback = false;
-let feedbackMessage = "";
-let feedbackColor;
-let gameOver = false;
-
-function setup() {
-  createCanvas(800, 600);
-  
-  // Initialize rock samples with their characteristics and correct classification
-  rocks = [
-    {
-      name: "Granite",
-      texture: "Coarse-grained, rough",
-      color: "Light-colored, often pink, white, or gray",
-      crystalSize: "Large visible crystals",
-      layers: "No layers",
-      type: "igneous",
-      image: null
-    },
-    {
-      name: "Basalt",
-      texture: "Fine-grained, smooth",
-      color: "Dark gray to black",
-      crystalSize: "Very small or no visible crystals",
-      layers: "No layers",
-      type: "igneous",
-      image: null
-    },
-    {
-      name: "Sandstone",
-      texture: "Grainy, can be rough or smooth",
-      color: "Brown, tan, or red",
-      crystalSize: "Visible grains, no crystals",
-      layers: "Often shows layers",
-      type: "sedimentary",
-      image: null
-    },
-    {
-      name: "Limestone",
-      texture: "Smooth to slightly grainy",
-      color: "White, gray, or tan",
-      crystalSize: "Fine-grained, may have visible fossils",
-      layers: "May show layers",
-      type: "sedimentary",
-      image: null
-    },
-    {
-      name: "Marble",
-      texture: "Smooth, often polished",
-      color: "White with colorful veins",
-      crystalSize: "Large interlocking crystals",
-      layers: "No layers, but may have bands",
-      type: "metamorphic",
-      image: null
-    },
-    {
-      name: "Schist",
-      texture: "Flaky or platy",
-      color: "Various colors, often with mica",
-      crystalSize: "Visible platy crystals",
-      layers: "Distinct foliation (layers)",
-      type: "metamorphic",
-      image: null
-    }
-  ];
-  
-  totalRocks = rocks.length;
-  
-  // Create buttons for rock classification
-  let buttonY = 450;
-  let buttonWidth = 150;
-  let buttonHeight = 50;
-  let buttonSpacing = 50;
-  
-  createButton('Igneous')
-    .position(100, buttonY)
-    .size(buttonWidth, buttonHeight)
-    .mousePressed(() => checkAnswer('igneous'));
-    
-  createButton('Sedimentary')
-    .position(100 + buttonWidth + buttonSpacing, buttonY)
-    .size(buttonWidth, buttonHeight)
-    .mousePressed(() => checkAnswer('sedimentary'));
-    
-  createButton('Metamorphic')
-    .position(100 + 2 * (buttonWidth + buttonSpacing), buttonY)
-    .size(buttonWidth, buttonHeight)
-    .mousePressed(() => checkAnswer('metamorphic'));
-    
-  createButton('Next Rock')
-    .position(350, 520)
-    .size(100, 40)
-    .mousePressed(nextRock)
-    .hide();
-}
-
-function draw() {
-  background(220);
-  
-  if (gameOver) {
-    displayFinalScore();
-    return;
-  }
-  
-  // Display current rock information
-  let currentRock = rocks[currentRockIndex];
-  
-  // Draw rock sample area
-  fill(180, 180, 200);
-  rect(50, 50, 700, 350);
-  fill(0);
-  textSize(24);
-  textAlign(CENTER);
-  text("Rock Sample #" + (currentRockIndex + 1), width/2, 80);
-  
-  // Draw rock characteristics
-  textSize(16);
-  textAlign(LEFT);
-  text("Texture: " + currentRock.texture, 70, 130);
-  text("Color: " + currentRock.color, 70, 160);
-  text("Crystal Size: " + currentRock.crystalSize, 70, 190);
-  text("Layers: " + currentRock.layers, 70, 220);
-  
-  // Draw visual representation of the rock
-  drawRockVisual(currentRock);
-  
-  // Display feedback if needed
-  if (showFeedback) {
-    fill(feedbackColor);
-    textSize(20);
-    textAlign(CENTER);
-    text(feedbackMessage, width/2, 400);
-  }
-  
-  // Display progress
-  fill(0);
-  textSize(16);
-  textAlign(RIGHT);
-  text("Rock " + (currentRockIndex + 1) + " of " + totalRocks, width - 50, 30);
-  text("Score: " + score, width - 50, 50);
-}
-
-function drawRockVisual(rock) {
-  // Draw a visual representation based on rock type
-  let centerX = width/2;
-  let centerY = 250;
-  
-  if (rock.type === "igneous") {
-    // Draw igneous rock (granite-like appearance)
-    fill(150, 100, 80);
-    noStroke();
-    ellipse(centerX, centerY, 150, 150);
-    
-    // Draw crystals
-    fill(200, 150, 150);
-    ellipse(centerX - 30, centerY - 20, 25, 25);
-    fill(180, 180, 180);
-    ellipse(centerX + 40, centerY - 10, 30, 30);
-    fill(120, 120, 140);
-    ellipse(centerX + 10, centerY + 30, 20, 20);
-    fill(220, 200, 200);
-    ellipse(centerX - 40, centerY + 20, 35, 35);
-  } 
-  else if (rock.type === "sedimentary") {
-    // Draw sedimentary rock with layers
-    noStroke();
-    fill(200, 180, 150);
-    rect(centerX - 75, centerY - 75, 150, 30);
-    fill(180, 160, 130);
-    rect(centerX - 75, centerY - 45, 150, 30);
-    fill(160, 140, 110);
-    rect(centerX - 75, centerY - 15, 150, 30);
-    fill(140, 120, 90);
-    rect(centerX - 75, centerY + 15, 150, 30);
-    fill(120, 100, 70);
-    rect(centerX - 75, centerY + 45, 150, 30);
-  } 
-  else if (rock.type === "metamorphic") {
-    // Draw metamorphic rock with foliation
-    fill(200, 200, 220);
-    noStroke();
-    ellipse(centerX, centerY, 150, 150);
-    
-    // Draw foliation lines
-    stroke(100, 100, 120);
-    strokeWeight(2);
-    for (let i = 0; i < 5; i++) {
-      let y = centerY - 60 + i * 30;
-      line(centerX - 70, y, centerX + 70, y);
-    }
-  }
-}
-
-function checkAnswer(userAnswer) {
-  if (showFeedback) return; // Prevent multiple answers for the same rock
-  
-  let currentRock = rocks[currentRockIndex];
-  let correct = userAnswer === currentRock.type;
-  
-  if (correct) {
-    score++;
-    feedbackMessage = "Correct! " + currentRock.name + " is " + currentRock.type + ".";
-    feedbackColor = color(0, 180, 0); // Green for correct
-  } else {
-    feedbackMessage = "Incorrect. " + currentRock.name + " is " + currentRock.type + ", not " + userAnswer + ".";
-    feedbackColor = color(180, 0, 0); // Red for incorrect
-  }
-  
-  showFeedback = true;
-  
-  // Show next button after feedback
-  let nextBtn = select('button:contains("Next Rock")');
-  if (!nextBtn) {
-    nextBtn = createButton('Next Rock')
-      .position(350, 520)
-      .size(100, 40)
-      .mousePressed(nextRock);
-  }
-  nextBtn.show();
-}
-
-function nextRock() {
-  currentRockIndex++;
-  
-  if (currentRockIndex >= rocks.length) {
-    gameOver = true;
-  } else {
-    showFeedback = false;
-    // Hide next button until user answers
-    select('button:contains("Next Rock")').hide();
-  }
-}
-
-function displayFinalScore() {
-  background(240);
-  
-  fill(0);
-  textSize(32);
-  textAlign(CENTER);
-  text("Rock Identification Quiz Complete!", width/2, 100);
-  
-  textSize(24);
-  text("Your Score: " + score + " out of " + totalRocks, width/2, 180);
-  
-  let percentage = (score / totalRocks) * 100;
-  textSize(20);
-  text("Percentage: " + nf(percentage, 0, 1) + "%", width/2, 220);
-  
-  // Show performance message
-  if (percentage >= 80) {
-    fill(0, 180, 0);
-    text("Excellent! You're a rock identification expert!", width/2, 270);
-  } else if (percentage >= 60) {
-    fill(200, 150, 0);
-    text("Good job! Keep practicing to improve your skills.", width/2, 270);
-  } else {
-    fill(180, 0, 0);
-    text("Keep studying the characteristics of different rock types!", width/2, 270);
-  }
-  
-  // Display summary of all rocks
-  fill(0);
-  textSize(16);
-  textAlign(LEFT);
-  let y = 320;
-  for (let i = 0; i < rocks.length; i++) {
-    text((i+1) + ". " + rocks[i].name + " - " + rocks[i].type, 100, y);
-    y += 25;
-  }
-  
-  // Restart button
-  createButton('Restart Quiz')
-    .position(width/2 - 50, 500)
-    .size(100, 40)
-    .mousePressed(restartQuiz);
-}
-
-function restartQuiz() {
-  currentRockIndex = 0;
-  score = 0;
-  showFeedback = false;
-  gameOver = false;
-  select('button:contains("Next Rock")').hide();
-}
-    </script>
+    <div class="footer">POWERED BY AI TUTOR</div>
 </body>
 </html>
