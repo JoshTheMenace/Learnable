@@ -89,6 +89,8 @@ export default function FileBasedContentWindow({
   useEffect(() => {
     if (forceRefresh) {
       console.log('[REFRESH] Force refresh triggered!');
+      setPreviousLessonContent(''); // Force refresh by clearing cache
+      setPreviousEnvironmentContent(''); // Force refresh by clearing cache
       fetchContent();
     }
   }, [forceRefresh]);
