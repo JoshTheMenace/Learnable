@@ -1,6 +1,6 @@
-# AI Tutor
+# Learnable
 
-An interactive AI-powered learning platform that creates personalized lesson plans and live coding environments on any topic.
+The Lovable.dev or Bolt.new — but for personalized learning. Learn anything with AI-generated lessons, interactive games, and quizzes — a glimpse at what education could look like when it’s re-imagined through AI.
 
 [This project was created for the Fall 2025 Weber State Hackathon, winning 2 prizes.](https://devpost.com/software/learnable-bcsnf5)
 
