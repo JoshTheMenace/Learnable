@@ -2,6 +2,8 @@
 
 An interactive AI-powered learning platform that creates personalized lesson plans and live coding environments on any topic.
 
+[This project was created for the Fall 2025 Weber State Hackathon, winning 2 prizes.](https://devpost.com/software/learnable-bcsnf5)
+
 ![AI Tutor Demo](https://d112y698adiu2z.cloudfront.net/photos/production/software_photos/003/837/204/datas/gallery.jpg)
 
 ## Demo Video
