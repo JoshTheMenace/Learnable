@@ -4,7 +4,7 @@ The Lovable.dev or Bolt.new — but for personalized learning. Learn anything wi
 
 [This project was created for the Fall 2025 Weber State Hackathon, winning 2 prizes.](https://devpost.com/software/learnable-bcsnf5)
 
-![AI Tutor Demo](https://d112y698adiu2z.cloudfront.net/photos/production/software_photos/003/837/204/datas/gallery.jpg)
+![Learnable Demo](https://d112y698adiu2z.cloudfront.net/photos/production/software_photos/003/837/204/datas/gallery.jpg)
 
 ## Demo Video
 
@@ -41,8 +41,8 @@ The Lovable.dev or Bolt.new — but for personalized learning. Learn anything wi
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/ai-tutor.git
-cd ai-tutor
+git clone https://github.com/joshthemenace/learnable.git
+cd learnable
 ```
 
 2. Install dependencies:
@@ -83,7 +83,7 @@ pnpm dev
 ## Project Structure
 
 ```
-ai-tutor/
+learnable/
 ├── app/
 │   ├── api/
 │   │   ├── learn/          # Main AI learning endpoint
