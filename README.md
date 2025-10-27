@@ -22,7 +22,7 @@ An interactive AI-powered learning platform that creates personalized lesson pla
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript
-- **AI Integration**: Anthropic Claude (via AI SDK), Cerebras
+- **AI Integration**: Anthropic Claude (via Claude Agent SDK), Cerebras
 - **Styling**: Tailwind CSS 4
 - **Streaming**: Real-time AI responses using streaming APIs
 - **Content Rendering**: React Markdown for lesson formatting
@@ -117,4 +117,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-Made with by [JoshTheMenace](https://github.com/JoshTheMenace)
+Created by [JoshTheMenace](https://github.com/JoshTheMenace)
